@@ -34,7 +34,7 @@ def start_backend():
     os.chdir(backend_dir)
     
     # Активируем виртуальное окружение и запускаем сервер
-    cmd = f"source venv/bin/activate && python run.py"
+    cmd = f". venv/bin/activate && python run.py"
     
     try:
         process = subprocess.Popen(

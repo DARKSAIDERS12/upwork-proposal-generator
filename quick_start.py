@@ -25,7 +25,7 @@ def start_servers():
     
     # Запускаем backend
     print("📡 Запуск backend сервера...")
-    backend_cmd = "cd backend && source venv/bin/activate && nohup python run.py > backend.log 2>&1 &"
+    backend_cmd = "cd backend && . venv/bin/activate && nohup python run.py > backend.log 2>&1 &"
     subprocess.run(backend_cmd, shell=True)
     
     # Запускаем frontend
