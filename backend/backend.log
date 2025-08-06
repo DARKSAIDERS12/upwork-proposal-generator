@@ -1,0 +1,14 @@
+INFO:     Will watch for changes in these directories: ['/home/darksaiders/бизнес/upwork-proposal-generator/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [7784] using WatchFiles
+INFO:     Started server process [7789]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+🚀 Upwork Proposal Generator запущен с защитой!
+📡 GET /health - 200 - 0.001s
+INFO:     192.168.0.124:42710 - "GET /health HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'app/models/subscription.py', 'app/main.py', 'app/routers/__init__.py', 'app/schemas.py', 'app/models/proposal.py', 'app/services/auth_service.py', 'app/database.py', 'run.py', 'app/services/openai_service.py', 'app/config.py', 'app/models/__init__.py', 'app/routers/proposals.py', 'app/services/__init__.py', 'app/models/user.py', 'app/routers/auth.py', 'app/__init__.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7789]
