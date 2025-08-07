@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест регистрации - Upwork Proposal Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест регистрации Upwork Proposal Generator</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Информация</h3>
+            <p>Этот тест проверяет функциональность регистрации на сайте GitHub Pages.</p>
+            <p><strong>URL сайта:</strong> <a href="https://darksaiders12.github.io/upwork-proposal-generator/" target="_blank">https://darksaiders12.github.io/upwork-proposal-generator/</a></p>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Тест localStorage</h3>
+            <button onclick="testLocalStorage()">Проверить localStorage</button>
+            <div id="localStorageResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>👤 Тест регистрации</h3>
+            <button onclick="testRegistration()">Тест регистрации</button>
+            <div id="registrationResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 Тест входа</h3>
+            <button onclick="testLogin()">Тест входа</button>
+            <div id="loginResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Тест генерации предложения</h3>
+            <button onclick="testProposalGeneration()">Тест генерации</button>
+            <div id="proposalResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧹 Очистка данных</h3>
+            <button onclick="clearData()">Очистить все данные</button>
+            <div id="clearResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Имитация API функций
+        async function apiRequest(endpoint, options = {}) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const url = endpoint;
+            
+            if (url === '/auth/register') {
+                const userData = JSON.parse(options.body);
+                
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                if (users.find(u => u.email === userData.email)) {
+                    throw new Error('Пользователь с таким email уже существует');
+                }
+                
+                const newUser = {
+                    id: Date.now(),
+                    ...userData,
+                    created_at: new Date().toISOString()
+                };
+                
+                users.push(newUser);
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                return { message: 'Регистрация успешна' };
+                
+            } else if (url === '/auth/login-json') {
+                const { email, password } = JSON.parse(options.body);
+                
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const user = users.find(u => u.email === email && u.password === password);
+                
+                if (!user) {
+                    throw new Error('Неверный email или пароль');
+                }
+                
+                const token = 'demo_token_' + Date.now();
+                localStorage.setItem('authToken', token);
+                
+                return { 
+                    access_token: token,
+                    user: { ...user, password: undefined }
+                };
+                
+            } else if (url === '/auth/me') {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    throw new Error('Не авторизован');
+                }
+                
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const user = users.find(u => u.id === parseInt(authToken.split('_')[2]));
+                
+                if (!user) {
+                    throw new Error('Пользователь не найден');
+                }
+                
+                return { ...user, password: undefined };
+                
+            } else if (url === '/proposals/generate') {
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    throw new Error('Не авторизован');
+                }
+                
+                const proposalData = JSON.parse(options.body);
+                const demoProposal = generateDemoProposal(proposalData);
+                
+                const proposals = JSON.parse(localStorage.getItem('proposals') || '[]');
+                proposals.push({
+                    id: Date.now(),
+                    user_id: parseInt(authToken.split('_')[2]),
+                    ...proposalData,
+                    content: demoProposal,
+                    created_at: new Date().toISOString()
+                });
+                localStorage.setItem('proposals', JSON.stringify(proposals));
+                
+                return { content: demoProposal };
+            }
+            
+            throw new Error('Неизвестный endpoint');
+        }
+
+        function generateDemoProposal(data) {
+            return `Уважаемый клиент!
+
+Я внимательно изучил ваш проект "${data.project_description}" и готов предложить профессиональное решение.
+
+**Мой опыт:**
+- ${data.experience_level} опыта в ${data.specialization}
+- Более 50 успешных проектов
+- 100% положительных отзывов
+
+Бюджет: ${data.budget_range}
+
+Готов обсудить детали и начать работу немедленно!
+
+С уважением,
+[Ваше имя]`;
+        }
+
+        async function testLocalStorage() {
+            const result = document.getElementById('localStorageResult');
+            try {
+                const testData = { test: 'data' };
+                localStorage.setItem('test', JSON.stringify(testData));
+                const retrieved = JSON.parse(localStorage.getItem('test'));
+                localStorage.removeItem('test');
+                
+                if (JSON.stringify(testData) === JSON.stringify(retrieved)) {
+                    result.className = 'result success';
+                    result.textContent = '✅ localStorage работает корректно!';
+                } else {
+                    throw new Error('Данные не совпадают');
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Ошибка localStorage: ${error.message}`;
+            }
+        }
+
+        async function testRegistration() {
+            const result = document.getElementById('registrationResult');
+            try {
+                const userData = {
+                    email: 'test@example.com',
+                    password: 'password123',
+                    first_name: 'Тест',
+                    last_name: 'Пользователь',
+                    specialization: 'Веб-разработка',
+                    experience_level: '3-5 лет'
+                };
+                
+                await apiRequest('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify(userData)
+                });
+                
+                result.className = 'result success';
+                result.textContent = '✅ Регистрация прошла успешно!\n\nДанные пользователя:\n' + JSON.stringify(userData, null, 2);
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Ошибка регистрации: ${error.message}`;
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('loginResult');
+            try {
+                const loginData = {
+                    email: 'test@example.com',
+                    password: 'password123'
+                };
+                
+                const response = await apiRequest('/auth/login-json', {
+                    method: 'POST',
+                    body: JSON.stringify(loginData)
+                });
+                
+                result.className = 'result success';
+                result.textContent = '✅ Вход выполнен успешно!\n\nТокен: ' + response.access_token + '\n\nДанные пользователя:\n' + JSON.stringify(response.user, null, 2);
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Ошибка входа: ${error.message}`;
+            }
+        }
+
+        async function testProposalGeneration() {
+            const result = document.getElementById('proposalResult');
+            try {
+                const proposalData = {
+                    project_description: 'Создание интернет-магазина на WordPress',
+                    budget_range: '$1000-5000',
+                    specialization: 'Веб-разработка',
+                    experience_level: '3-5 лет',
+                    key_requirements: 'WordPress, WooCommerce, PHP',
+                    tone: 'профессиональный'
+                };
+                
+                const response = await apiRequest('/proposals/generate', {
+                    method: 'POST',
+                    body: JSON.stringify(proposalData)
+                });
+                
+                result.className = 'result success';
+                result.textContent = '✅ Предложение сгенерировано успешно!\n\n' + response.content;
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Ошибка генерации: ${error.message}`;
+            }
+        }
+
+        function clearData() {
+            const result = document.getElementById('clearResult');
+            try {
+                localStorage.removeItem('users');
+                localStorage.removeItem('proposals');
+                localStorage.removeItem('authToken');
+                
+                result.className = 'result success';
+                result.textContent = '✅ Все данные очищены!';
+            } catch (error) {
+                result.className = 'result error';
+                result.textContent = `❌ Ошибка очистки: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html> 
