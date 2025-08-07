@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE = 'http://192.168.0.124:8000/api/v1';
+const API_BASE = 'http://localhost:8000/api/v1';
 
 // State management
 let currentUser = null;
