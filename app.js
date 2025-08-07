@@ -132,8 +132,9 @@ async function apiRequest(endpoint, options = {}) {
                 throw new Error('Неверный email или пароль');
             }
             
-            // Создаем токен
+            // Создаем токен и сохраняем информацию о пользователе
             const token = 'demo_token_' + Date.now();
+            localStorage.setItem('currentUser', JSON.stringify({ ...user, password: undefined }));
             
             return { 
                 access_token: token,
@@ -145,13 +146,13 @@ async function apiRequest(endpoint, options = {}) {
                 throw new Error('Не авторизован');
             }
             
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            const user = users.find(u => u.id === parseInt(authToken.split('_')[2]));
-            
-            if (!user) {
+            // Сохраняем информацию о пользователе в токене
+            const userInfo = localStorage.getItem('currentUser');
+            if (!userInfo) {
                 throw new Error('Пользователь не найден');
             }
             
+            const user = JSON.parse(userInfo);
             return { ...user, password: undefined };
             
         } else if (url === '/proposals/generate') {
@@ -342,6 +343,7 @@ elements.logoutBtn.addEventListener('click', () => {
     authToken = null;
     currentUser = null;
     localStorage.removeItem('authToken');
+    localStorage.removeItem('currentUser');
     showSection('hero');
     showNotification('Вы вышли из системы');
 });
