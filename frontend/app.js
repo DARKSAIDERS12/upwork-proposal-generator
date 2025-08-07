@@ -1,5 +1,39 @@
 // API Configuration
-const API_BASE = 'http://localhost:8000/api/v1';
+const API_BASE = "http://localhost:8000/api/v1"; // Для работы нужно запустить локальный сервер
+
+
+// Проверка подключения к API
+async function checkApiConnection() {
+    try {
+        const response = await fetch(`${API_BASE.replace("/api/v1", "")}/health`);
+        if (response.ok) {
+            console.log("✅ API сервер доступен");
+            return true;
+        }
+    } catch (error) {
+        console.log("❌ API сервер недоступен");
+        showApiError();
+        return false;
+    }
+}
+
+// Показать ошибку подключения к API
+function showApiError() {
+    const errorDiv = document.createElement("div");
+    errorDiv.innerHTML = `
+        <div style="background: #fee; border: 1px solid #fcc; padding: 20px; margin: 20px; border-radius: 8px; text-align: center;">
+            <h3 style="color: #c33; margin: 0 0 15px 0;">🚫 Сервер недоступен</h3>
+            <p style="margin: 0 0 15px 0;">Для работы сайта нужно запустить локальный сервер:</p>
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; font-family: monospace; text-align: left;">
+                <p style="margin: 5px 0;"><strong>1.</strong> Откройте терминал</p>
+                <p style="margin: 5px 0;"><strong>2.</strong> Перейдите в папку проекта</p>
+                <p style="margin: 5px 0;"><strong>3.</strong> Выполните: <code>python3 quick_start.py</code></p>
+                <p style="margin: 5px 0;"><strong>4.</strong> Откройте: <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+            </div>
+        </div>
+    `;
+    document.body.insertBefore(errorDiv, document.body.firstChild);
+}
 
 // State management
 let currentUser = null;
@@ -288,6 +322,9 @@ function fillUserData() {
 // Initialize app
 async function initApp() {
     if (authToken) {
+    // Проверяем подключение к API
+    await checkApiConnection();
+
         try {
             const user = await getCurrentUser();
             updateUserInfo(user);
