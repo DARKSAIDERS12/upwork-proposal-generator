@@ -1,5 +1,5 @@
-// API Configuration
-const API_BASE = 'http://192.168.0.124:8000/api/v1';
+// API Configuration - используем локальное хранилище для демо
+const USE_LOCAL_STORAGE = true;
 
 // State management
 let currentUser = null;
@@ -92,36 +92,203 @@ function updateUserInfo(user) {
     elements.userSpecialization.textContent = user.specialization || 'Не указано';
 }
 
-// API functions
+// API functions - локальная версия для демонстрации
 async function apiRequest(endpoint, options = {}) {
-    const url = `${API_BASE}${endpoint}`;
-    const config = {
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
-        },
-        ...options
-    };
-    
-    if (authToken) {
-        config.headers.Authorization = `Bearer ${authToken}`;
-    }
-    
-    try {
-        const response = await fetch(url, config);
-        const data = await response.json();
+    if (USE_LOCAL_STORAGE) {
+        // Имитируем API задержку
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        if (!response.ok) {
-            throw new Error(data.detail || 'Произошла ошибка');
+        const url = endpoint;
+        
+        if (url === '/auth/register') {
+            const userData = JSON.parse(options.body);
+            
+            // Проверяем, что пользователь не существует
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            if (users.find(u => u.email === userData.email)) {
+                throw new Error('Пользователь с таким email уже существует');
+            }
+            
+            // Создаем нового пользователя
+            const newUser = {
+                id: Date.now(),
+                ...userData,
+                created_at: new Date().toISOString()
+            };
+            
+            users.push(newUser);
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            return { message: 'Регистрация успешна' };
+            
+        } else if (url === '/auth/login-json') {
+            const { email, password } = JSON.parse(options.body);
+            
+            // Проверяем пользователя
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.email === email && u.password === password);
+            
+            if (!user) {
+                throw new Error('Неверный email или пароль');
+            }
+            
+            // Создаем токен
+            const token = 'demo_token_' + Date.now();
+            
+            return { 
+                access_token: token,
+                user: { ...user, password: undefined }
+            };
+            
+        } else if (url === '/auth/me') {
+            if (!authToken) {
+                throw new Error('Не авторизован');
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const user = users.find(u => u.id === parseInt(authToken.split('_')[2]));
+            
+            if (!user) {
+                throw new Error('Пользователь не найден');
+            }
+            
+            return { ...user, password: undefined };
+            
+        } else if (url === '/proposals/generate') {
+            if (!authToken) {
+                throw new Error('Не авторизован');
+            }
+            
+            const proposalData = JSON.parse(options.body);
+            
+            // Генерируем демо предложение
+            const demoProposal = generateDemoProposal(proposalData);
+            
+            // Сохраняем в историю
+            const proposals = JSON.parse(localStorage.getItem('proposals') || '[]');
+            proposals.push({
+                id: Date.now(),
+                user_id: parseInt(authToken.split('_')[2]),
+                ...proposalData,
+                content: demoProposal,
+                created_at: new Date().toISOString()
+            });
+            localStorage.setItem('proposals', JSON.stringify(proposals));
+            
+            return { content: demoProposal };
         }
         
-        return data;
-    } catch (error) {
-        console.error('API Error:', error);
-        throw error;
+        throw new Error('Неизвестный endpoint');
+    } else {
+        // Оригинальный API код
+        const url = `${API_BASE}${endpoint}`;
+        const config = {
+            headers: {
+                'Content-Type': 'application/json',
+                ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+            },
+            ...options
+        };
+        
+        const response = await fetch(url, config);
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'API Error');
+        }
+        
+        return await response.json();
     }
 }
 
+// Функция для генерации демо предложений
+function generateDemoProposal(data) {
+    const templates = {
+        'профессиональный': `Уважаемый клиент!
+
+Я внимательно изучил ваш проект "${data.project_description}" и готов предложить профессиональное решение.
+
+**Мой опыт:**
+- ${data.experience_level} опыта в ${data.specialization}
+- Более 50 успешных проектов
+- 100% положительных отзывов
+
+**Мой подход к вашему проекту:**
+1. Детальный анализ требований
+2. Создание технического плана
+3. Поэтапная разработка с регулярными обновлениями
+4. Тестирование и оптимизация
+5. Поддержка после запуска
+
+**Почему выбирают меня:**
+✅ Соблюдение сроков
+✅ Качественный код
+✅ Прозрачная коммуникация
+✅ Гибкость в изменениях
+
+Бюджет: ${data.budget_range}
+
+Готов обсудить детали и начать работу немедленно!
+
+С уважением,
+[Ваше имя]`,
+
+        'дружелюбный': `Привет! 👋
+
+Очень заинтересовался твоим проектом "${data.project_description}"! 
+
+**Что я могу предложить:**
+🎯 ${data.experience_level} опыта в ${data.specialization}
+🚀 Быстрая и качественная работа
+💬 Постоянная связь и обновления
+🎨 Современные технологии и подходы
+
+**Мой план работы:**
+1. Обсуждение деталей проекта
+2. Создание макета/прототипа
+3. Разработка с показом промежуточных результатов
+4. Финальная доработка и тестирование
+
+Бюджет: ${data.budget_range}
+
+Давай обсудим детали! Буду рад ответить на все вопросы 😊
+
+До связи!`,
+
+        'креативный': `🌟 ВАУ! Отличный проект! 🌟
+
+"${data.project_description}" - это именно то, что я люблю создавать!
+
+**Мой креативный подход:**
+✨ Уникальные решения для каждой задачи
+🎨 Современный дизайн и UX
+⚡ Быстрая и эффективная разработка
+🎯 Фокус на результатах
+
+**Что вы получите:**
+- ${data.experience_level} опыта в ${data.specialization}
+- Инновационные решения
+- Полную поддержку
+- Прозрачность процесса
+
+**Мой процесс:**
+1. 🧠 Мозговой штурм идей
+2. 📝 Детальное планирование
+3. 🚀 Быстрая реализация
+4. 🎯 Тестирование и оптимизация
+
+Бюджет: ${data.budget_range}
+
+Готов создать что-то потрясающее! 🚀
+
+Давайте начнем прямо сейчас! ✨`
+    };
+    
+    const tone = data.tone || 'профессиональный';
+    return templates[tone] || templates['профессиональный'];
+}
+
+// API функции
 async function register(userData) {
     return await apiRequest('/auth/register', {
         method: 'POST',
