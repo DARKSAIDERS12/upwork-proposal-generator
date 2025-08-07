@@ -1,5 +1,6 @@
 // API Configuration - используем локальное хранилище для демо
 const USE_LOCAL_STORAGE = true;
+const APP_VERSION = '1.2.0'; // Версия для обновления кэша
 
 // State management
 let currentUser = null;
@@ -142,17 +143,25 @@ async function apiRequest(endpoint, options = {}) {
             };
             
         } else if (url === '/auth/me') {
+            console.log('Getting current user...');
+            console.log('Auth token:', authToken);
+            
             if (!authToken) {
+                console.error('No auth token found');
                 throw new Error('Не авторизован');
             }
             
             // Сохраняем информацию о пользователе в токене
             const userInfo = localStorage.getItem('currentUser');
+            console.log('User info from localStorage:', userInfo);
+            
             if (!userInfo) {
+                console.error('No currentUser found in localStorage');
                 throw new Error('Пользователь не найден');
             }
             
             const user = JSON.parse(userInfo);
+            console.log('Parsed user:', user);
             return { ...user, password: undefined };
             
         } else if (url === '/proposals/generate') {
@@ -375,13 +384,20 @@ elements.loginFormElement.addEventListener('submit', async (e) => {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
     
+    console.log('Login attempt:', { email, password });
+    console.log('App version:', APP_VERSION);
+    
     try {
+        console.log('Calling login function...');
         await login(email, password);
+        console.log('Login successful, getting current user...');
         const user = await getCurrentUser();
+        console.log('Current user retrieved:', user);
         updateUserInfo(user);
         showSection('dashboard');
         showNotification('Вход выполнен успешно');
     } catch (error) {
+        console.error('Login error:', error);
         showNotification(error.message, 'error');
     }
 });
