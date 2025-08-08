@@ -279,35 +279,35 @@ async function generateProposalWithAI(projectData) {
     
     const { title, description, budget, specialization, tone } = projectData;
     
-    const proposal = `Dear Client,
+    const proposal = `Уважаемый клиент,
 
-I've reviewed your project "${title}" and I'm excited about the opportunity to work with you. With my extensive experience in ${specialization}, I'm confident I can deliver exceptional results that exceed your expectations.
+Я изучил ваш проект "${title}" и очень заинтересован в возможности сотрудничества с вами. Благодаря моему обширному опыту в области ${specialization}, я уверен, что смогу предоставить исключительные результаты, которые превзойдут ваши ожидания.
 
-**Why I'm the right fit for your project:**
+**Почему я подхожу для вашего проекта:**
 
-✅ **Proven Expertise**: I have successfully completed 50+ similar projects with 5-star ratings
-✅ **Quality Assurance**: Every deliverable goes through rigorous testing and review
-✅ **Clear Communication**: Regular updates and transparent project management
-✅ **On-time Delivery**: 100% on-time completion rate with all my clients
+✅ **Проверенный опыт**: Я успешно выполнил 50+ подобных проектов с рейтингом 5 звезд
+✅ **Гарантия качества**: Каждый результат проходит тщательное тестирование и проверку
+✅ **Прозрачная коммуникация**: Регулярные обновления и прозрачное управление проектом
+✅ **Своевременная доставка**: 100% своевременное выполнение всех проектов
 
-**My approach to your project:**
-1. Detailed analysis of requirements and objectives
-2. Custom solution design tailored to your specific needs
-3. Iterative development with regular feedback cycles
-4. Thorough testing and quality assurance
-5. Comprehensive documentation and support
+**Мой подход к вашему проекту:**
+1. Детальный анализ требований и целей
+2. Индивидуальное решение, адаптированное под ваши потребности
+3. Итеративная разработка с регулярными циклами обратной связи
+4. Тщательное тестирование и контроль качества
+5. Подробная документация и поддержка
 
-**Budget**: I can work within your ${budget} budget while ensuring top-quality results.
+**Бюджет**: Я могу работать в рамках вашего бюджета ${budget}, обеспечивая высокое качество результатов.
 
-**Timeline**: I can start immediately and deliver within your required timeframe.
+**Сроки**: Я могу начать немедленно и выполнить проект в требуемые сроки.
 
-I'm ready to begin working on your project right away. Let's discuss the details and get started!
+Я готов сразу приступить к работе над вашим проектом. Давайте обсудим детали и начнем!
 
-Best regards,
-[Your Name]
-Freelance ${specialization} Expert
+С наилучшими пожеланиями,
+[Ваше имя]
+Фрилансер-эксперт по ${specialization}
 
-P.S. I'm available for a quick call to discuss your project in detail.`;
+P.S. Я доступен для быстрого звонка, чтобы обсудить ваш проект подробнее.`;
     
     return {
         success: true,
