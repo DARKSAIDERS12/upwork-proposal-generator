@@ -1,4 +1,14 @@
-# Python
+# Конфиденциальные файлы
+backend/.env
+*.db
+*.sqlite
+*.sqlite3
+
+# Логи
+*.log
+logs/
+
+# Кэш Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -19,30 +29,13 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
-# Virtual environments
+# Виртуальные окружения
 venv/
 env/
 ENV/
 env.bak/
 venv.bak/
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Logs
-*.log
-logs/
 
 # IDE
 .vscode/
@@ -51,37 +44,17 @@ logs/
 *.swo
 *~
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# SSL certificates
-*.pem
-*.key
-*.crt
-
-# Ngrok
-ngrok-stable-linux-amd64.zip
-ngrok
-
-# Temporary files
+# Временные файлы
 *.tmp
 *.temp
-temp/
-tmp/
+.DS_Store
+Thumbs.db
 
-# Node modules (if any)
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Резервные копии
+*.bak
+*.backup
+*~
 
-# Build directories
-docs/
-build/
-dist/ 
+# Stripe ключи (если случайно попали в репозиторий)
+stripe_keys.txt
+api_keys.txt 
