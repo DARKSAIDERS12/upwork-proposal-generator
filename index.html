@@ -3,229 +3,195 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upwork Proposal Generator - AI помощник для фрилансеров</title>
+    <title>Upwork Proposal Generator - Генератор предложений</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
-    <div id="app">
+    <div class="container">
         <!-- Header -->
         <header class="header">
-            <div class="container">
-                <div class="header-content">
-                    <div class="logo">
-                        <i class="fas fa-robot"></i>
-                        <span>Upwork Proposal Generator</span>
-                    </div>
-                    <nav class="nav">
-                        <button id="loginBtn" class="btn btn-outline">Войти</button>
-                        <button id="registerBtn" class="btn btn-primary">Регистрация</button>
-                    </nav>
-                </div>
+            <div class="logo">
+                <h1>🚀 Upwork Proposal Generator</h1>
+                <p>Создавайте убедительные предложения с помощью AI</p>
+            </div>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span id="userEmail"></span>
+                <button onclick="logout()" class="btn-secondary">Выйти</button>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="main">
-            <!-- Hero Section -->
-            <section class="hero">
-                <div class="container">
-                    <div class="hero-content">
-                        <h1>Создавайте выигрышные предложения на Upwork с помощью AI</h1>
-                        <p>Генерируйте профессиональные предложения за секунды. Увеличьте свои шансы получить проект!</p>
-                        <button id="startBtn" class="btn btn-primary btn-large">Начать бесплатно</button>
+        <!-- Auth Forms -->
+        <div id="authForms" class="auth-section">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <button class="tab-btn active" onclick="showTab('login')">Вход</button>
+                    <button class="tab-btn" onclick="showTab('register')">Регистрация</button>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form">
+                    <h2>Вход в систему</h2>
+                    <form onsubmit="login(event)">
+                        <div class="form-group">
+                            <label for="loginEmail">Email:</label>
+                            <input type="email" id="loginEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Пароль:</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Войти</button>
+                    </form>
+                </div>
+                
+                <!-- Register Form -->
+                <div id="registerForm" class="auth-form" style="display: none;">
+                    <h2>Регистрация</h2>
+                    <form onsubmit="register(event)">
+                        <div class="form-group">
+                            <label for="registerEmail">Email:</label>
+                            <input type="email" id="registerEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Пароль:</label>
+                            <input type="password" id="registerPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Подтвердите пароль:</label>
+                            <input type="password" id="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Зарегистрироваться</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="main-app" style="display: none;">
+            <!-- Subscription Status -->
+            <div class="subscription-status" id="subscriptionStatus">
+                <div class="subscription-info">
+                    <h3>Ваша подписка</h3>
+                    <div class="subscription-details">
+                        <span id="subscriptionType">Бесплатная</span>
+                        <span id="dailyRemaining">Осталось: 3 предложения</span>
                     </div>
                 </div>
-            </section>
-
-            <!-- Auth Forms -->
-            <section id="authSection" class="auth-section" style="display: none;">
-                <div class="container">
-                    <!-- Login Form -->
-                    <div id="loginForm" class="auth-form" style="display: none;">
-                        <h2>Вход в систему</h2>
-                        <form id="loginFormElement">
-                            <div class="form-group">
-                                <label for="loginEmail">Email</label>
-                                <input type="email" id="loginEmail" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="loginPassword">Пароль</label>
-                                <input type="password" id="loginPassword" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-full">Войти</button>
-                        </form>
-                        <p class="auth-switch">Нет аккаунта? <a href="#" id="showRegister">Зарегистрироваться</a></p>
-                    </div>
-
-                    <!-- Register Form -->
-                    <div id="registerForm" class="auth-form" style="display: none;">
-                        <h2>Регистрация</h2>
-                        <form id="registerFormElement">
-                            <div class="form-group">
-                                <label for="registerEmail">Email</label>
-                                <input type="email" id="registerEmail" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="registerPassword">Пароль</label>
-                                <input type="password" id="registerPassword" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="firstName">Имя</label>
-                                <input type="text" id="firstName" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="lastName">Фамилия</label>
-                                <input type="text" id="lastName" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="specialization">Специализация</label>
-                                <select id="specialization" required>
-                                    <option value="">Выберите специализацию</option>
-                                    <option value="Веб-разработка">Веб-разработка</option>
-                                    <option value="Дизайн">Дизайн</option>
-                                    <option value="Копирайтинг">Копирайтинг</option>
-                                    <option value="Маркетинг">Маркетинг</option>
-                                    <option value="Другое">Другое</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="experienceLevel">Уровень опыта</label>
-                                <select id="experienceLevel" required>
-                                    <option value="">Выберите опыт</option>
-                                    <option value="1-2 года">1-2 года</option>
-                                    <option value="3-5 лет">3-5 лет</option>
-                                    <option value="5+ лет">5+ лет</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-full">Зарегистрироваться</button>
-                        </form>
-                        <p class="auth-switch">Уже есть аккаунт? <a href="#" id="showLogin">Войти</a></p>
-                    </div>
-                </div>
-            </section>
+                <button onclick="showUpgradeModal()" class="btn-upgrade" id="upgradeBtn">Обновить до Premium</button>
+            </div>
 
             <!-- Proposal Generator -->
-            <section id="proposalSection" class="proposal-section" style="display: none;">
-                <div class="container">
-                    <div class="proposal-content">
-                        <h2>Генератор предложений</h2>
-                        <form id="proposalForm">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="projectDescription">Описание проекта</label>
-                                    <textarea id="projectDescription" rows="4" placeholder="Опишите проект, для которого вы хотите создать предложение..." required></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="budgetRange">Бюджет проекта</label>
-                                    <select id="budgetRange" required>
-                                        <option value="">Выберите бюджет</option>
-                                        <option value="$100-500">$100-500</option>
-                                        <option value="$500-1000">$500-1000</option>
-                                        <option value="$1000-5000">$1000-5000</option>
-                                        <option value="$5000+">$5000+</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="proposalSpecialization">Специализация</label>
-                                    <select id="proposalSpecialization" required>
-                                        <option value="">Выберите специализацию</option>
-                                        <option value="Веб-разработка">Веб-разработка</option>
-                                        <option value="Дизайн">Дизайн</option>
-                                        <option value="Копирайтинг">Копирайтинг</option>
-                                        <option value="Маркетинг">Маркетинг</option>
-                                        <option value="Другое">Другое</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label for="keyRequirements">Ключевые требования</label>
-                                    <input type="text" id="keyRequirements" placeholder="Например: WordPress, PHP, JavaScript">
-                                </div>
-                                <div class="form-group">
-                                    <label for="tone">Тон предложения</label>
-                                    <select id="tone" required>
-                                        <option value="профессиональный">Профессиональный</option>
-                                        <option value="дружелюбный">Дружелюбный</option>
-                                        <option value="формальный">Формальный</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-large btn-full">
-                                <i class="fas fa-magic"></i>
-                                Сгенерировать предложение
-                            </button>
-                        </form>
-
-                        <!-- Generated Proposal -->
-                        <div id="proposalResult" class="proposal-result" style="display: none;">
-                            <h3>Сгенерированное предложение</h3>
-                            <div class="proposal-content-box">
-                                <div id="proposalText" class="proposal-text"></div>
-                                <div class="proposal-actions">
-                                    <button id="copyBtn" class="btn btn-outline">
-                                        <i class="fas fa-copy"></i>
-                                        Копировать
-                                    </button>
-                                    <button id="newProposalBtn" class="btn btn-primary">
-                                        <i class="fas fa-plus"></i>
-                                        Новое предложение
-                                    </button>
-                                </div>
-                            </div>
+            <div class="generator-section">
+                <h2>Генератор предложений</h2>
+                <form id="proposalForm" onsubmit="generateProposal(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectTitle">Название проекта:</label>
+                            <input type="text" id="projectTitle" required placeholder="Например: Website Development">
                         </div>
-
-                        <!-- Loading -->
-                        <div id="loading" class="loading" style="display: none;">
-                            <div class="spinner"></div>
-                            <p>Генерируем предложение...</p>
+                        <div class="form-group">
+                            <label for="projectBudget">Бюджет:</label>
+                            <input type="text" id="projectBudget" required placeholder="Например: $1000-2000">
                         </div>
                     </div>
-                </div>
-            </section>
-
-            <!-- User Dashboard -->
-            <section id="dashboardSection" class="dashboard-section" style="display: none;">
-                <div class="container">
-                    <div class="dashboard-content">
-                        <div class="dashboard-header">
-                            <h2>Личный кабинет</h2>
-                            <button id="logoutBtn" class="btn btn-outline">Выйти</button>
+                    
+                    <div class="form-group">
+                        <label for="projectDescription">Описание проекта:</label>
+                        <textarea id="projectDescription" required placeholder="Опишите проект подробно..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="specialization">Специализация:</label>
+                            <select id="specialization" required>
+                                <option value="">Выберите специализацию</option>
+                                <option value="Web Development">Веб-разработка</option>
+                                <option value="Mobile Development">Мобильная разработка</option>
+                                <option value="Graphic Design">Графический дизайн</option>
+                                <option value="Content Writing">Написание контента</option>
+                                <option value="Digital Marketing">Цифровой маркетинг</option>
+                                <option value="Data Entry">Ввод данных</option>
+                                <option value="Translation">Перевод</option>
+                                <option value="Virtual Assistant">Виртуальный помощник</option>
+                            </select>
                         </div>
-                        <div class="user-info">
-                            <h3>Добро пожаловать, <span id="userName"></span>!</h3>
-                            <p>Email: <span id="userEmail"></span></p>
-                            <p>Специализация: <span id="userSpecialization"></span></p>
-                        </div>
-                        <div class="dashboard-actions">
-                            <button id="generateNewBtn" class="btn btn-primary">
-                                <i class="fas fa-plus"></i>
-                                Создать новое предложение
-                            </button>
-                            <button id="viewHistoryBtn" class="btn btn-outline">
-                                <i class="fas fa-history"></i>
-                                История предложений
-                            </button>
+                        <div class="form-group">
+                            <label for="tone">Тон предложения:</label>
+                            <select id="tone" required>
+                                <option value="Professional">Профессиональный</option>
+                                <option value="Friendly">Дружелюбный</option>
+                                <option value="Formal">Формальный</option>
+                                <option value="Creative">Креативный</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- Footer -->
-        <footer class="footer">
-            <div class="container">
-                <p>&copy; 2024 Upwork Proposal Generator. Создано с ❤️ для фрилансеров.</p>
+                    
+                    <button type="submit" class="btn-generate">Сгенерировать предложение</button>
+                </form>
             </div>
-        </footer>
-    </div>
 
-    <!-- Notifications -->
-    <div id="notifications" class="notifications"></div>
+            <!-- Generated Proposal -->
+            <div id="proposalResult" class="proposal-result" style="display: none;">
+                <h3>Сгенерированное предложение:</h3>
+                <div class="proposal-content" id="proposalContent"></div>
+                <div class="proposal-actions">
+                    <button onclick="copyProposal()" class="btn-secondary">Копировать</button>
+                    <button onclick="saveProposal()" class="btn-secondary">Сохранить</button>
+                    <button onclick="generateNew()" class="btn-primary">Сгенерировать новое</button>
+                </div>
+            </div>
+
+            <!-- Proposals History -->
+            <div class="history-section">
+                <h3>История предложений</h3>
+                <div id="proposalsHistory" class="proposals-list">
+                    <!-- История будет загружаться здесь -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Upgrade Modal -->
+        <div id="upgradeModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeUpgradeModal()">&times;</span>
+                <h2>Обновите до Premium</h2>
+                
+                <div class="pricing-cards">
+                    <div class="pricing-card">
+                        <h3>Бесплатная версия</h3>
+                        <div class="price">$0</div>
+                        <ul>
+                            <li>3 предложения в день</li>
+                            <li>Базовые шаблоны</li>
+                            <li>Демо AI</li>
+                            <li>Сообщество поддержка</li>
+                        </ul>
+                        <button class="btn-secondary" disabled>Текущий план</button>
+                    </div>
+                    
+                    <div class="pricing-card premium">
+                        <h3>Premium</h3>
+                        <div class="price">$9.99<span>/мес</span></div>
+                        <ul>
+                            <li>Неограниченные предложения</li>
+                            <li>Расширенные шаблоны</li>
+                            <li>Продвинутый AI (Yandex GPT)</li>
+                            <li>Приоритетная поддержка</li>
+                            <li>Экспорт предложений</li>
+                        </ul>
+                        <button onclick="startSubscription()" class="btn-primary">Выбрать Premium</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Генерируем предложение...</p>
+        </div>
+    </div>
 
     <script src="app.js"></script>
 </body>
