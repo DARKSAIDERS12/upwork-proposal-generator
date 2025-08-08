@@ -15,7 +15,42 @@ document.addEventListener('DOMContentLoaded', function() {
     initStripe();
     checkAuthStatus();
     loadProposalsHistory();
+    initializeSubscriptionSystem();
 });
+
+// Инициализация системы подписок
+function initializeSubscriptionSystem() {
+    // Проверяем и сбрасываем ежедневные лимиты
+    checkAndResetDailyLimits();
+    
+    // Устанавливаем интервал для ежедневного сброса (каждые 24 часа)
+    setInterval(checkAndResetDailyLimits, 24 * 60 * 60 * 1000);
+}
+
+// Проверка и сброс ежедневных лимитов
+function checkAndResetDailyLimits() {
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const today = new Date().toDateString();
+    
+    users.forEach(user => {
+        if (user.lastResetDate !== today) {
+            user.dailyRemaining = user.subscription === 'free' ? 3 : 999;
+            user.lastResetDate = today;
+        }
+    });
+    
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    // Обновляем текущего пользователя если он залогинен
+    if (currentUser) {
+        const updatedUser = users.find(u => u.email === currentUser.email);
+        if (updatedUser) {
+            currentUser = updatedUser;
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            updateSubscriptionStatus();
+        }
+    }
+}
 
 // Проверка статуса аутентификации
 function checkAuthStatus() {
@@ -80,17 +115,34 @@ async function register(event) {
     }
     
     try {
-        // В реальном приложении здесь был бы запрос к API
+        // Получаем существующих пользователей
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        
+        // Проверяем, не существует ли уже пользователь с таким email
+        if (users.find(u => u.email === email)) {
+            showNotification('Пользователь с таким email уже существует', 'error');
+            return;
+        }
+        
+        // Создаем нового пользователя
         const user = {
             id: Date.now(),
             email: email,
+            password: password, // В реальном приложении пароль должен быть захеширован
             subscription: 'free',
             dailyProposals: 3,
-            dailyRemaining: 3
+            dailyRemaining: 3,
+            lastResetDate: new Date().toDateString(),
+            createdAt: new Date().toISOString()
         };
         
-        localStorage.setItem('user', JSON.stringify(user));
+        // Добавляем пользователя в список
+        users.push(user);
+        localStorage.setItem('users', JSON.stringify(users));
+        
+        // Устанавливаем текущего пользователя
         currentUser = user;
+        localStorage.setItem('user', JSON.stringify(user));
         
         showMainApp();
         updateSubscriptionStatus();
@@ -109,21 +161,19 @@ async function login(event) {
     const password = document.getElementById('loginPassword').value;
     
     try {
-        // В реальном приложении здесь был бы запрос к API
-        const user = {
-            id: Date.now(),
-            email: email,
-            subscription: 'free',
-            dailyProposals: 3,
-            dailyRemaining: 3
-        };
+        // Получаем пользователей
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const user = users.find(u => u.email === email && u.password === password);
         
-        localStorage.setItem('user', JSON.stringify(user));
-        currentUser = user;
-        
-        showMainApp();
-        updateSubscriptionStatus();
-        showNotification('Вход выполнен успешно!', 'success');
+        if (user) {
+            currentUser = user;
+            localStorage.setItem('user', JSON.stringify(user));
+            showMainApp();
+            updateSubscriptionStatus();
+            showNotification('Вход выполнен успешно!', 'success');
+        } else {
+            showNotification('Неверный email или пароль', 'error');
+        }
         
     } catch (error) {
         showNotification('Ошибка входа: ' + error.message, 'error');
@@ -132,10 +182,10 @@ async function login(event) {
 
 // Выход пользователя
 function logout() {
-    localStorage.removeItem('user');
     currentUser = null;
+    localStorage.removeItem('user');
     showAuthForms();
-    showNotification('Вы вышли из системы', 'success');
+    showNotification('Выход выполнен', 'info');
 }
 
 // Обновление статуса подписки
@@ -195,6 +245,15 @@ async function generateProposal(event) {
             // Уменьшаем счетчик для бесплатной версии
             if (currentUser.subscription === 'free') {
                 currentUser.dailyRemaining--;
+                
+                // Обновляем пользователя в списке
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const userIndex = users.findIndex(u => u.email === currentUser.email);
+                if (userIndex !== -1) {
+                    users[userIndex] = currentUser;
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+                
                 localStorage.setItem('user', JSON.stringify(currentUser));
                 updateSubscriptionStatus();
             }
@@ -378,20 +437,24 @@ function closeUpgradeModal() {
 
 // Начать подписку
 async function startSubscription() {
-    if (!stripe) {
-        showNotification('Stripe не настроен. Обратитесь к администратору.', 'error');
-        return;
-    }
-    
     try {
-        // В реальном приложении здесь был бы запрос к backend для создания сессии
-        showNotification('Функция оплаты в разработке. Для тестирования обновите статус вручную.', 'success');
-        
         // Для демо-версии обновляем статус вручную
         currentUser.subscription = 'premium';
+        currentUser.dailyRemaining = 999; // Неограниченно для premium
+        
+        // Обновляем пользователя в списке
+        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const userIndex = users.findIndex(u => u.email === currentUser.email);
+        if (userIndex !== -1) {
+            users[userIndex] = currentUser;
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+        
         localStorage.setItem('user', JSON.stringify(currentUser));
         updateSubscriptionStatus();
         closeUpgradeModal();
+        
+        showNotification('Подписка Premium активирована! Теперь у вас неограниченный доступ.', 'success');
         
     } catch (error) {
         showNotification('Ошибка создания подписки: ' + error.message, 'error');
@@ -400,7 +463,41 @@ async function startSubscription() {
 
 // Управление подпиской
 function manageSubscription() {
-    showNotification('Функция управления подпиской в разработке', 'info');
+    if (currentUser && currentUser.subscription === 'premium') {
+        const message = `Ваша Premium подписка активна!\n\nПреимущества:\n✅ Неограниченные предложения\n✅ Продвинутый AI\n✅ Приоритетная поддержка\n✅ Экспорт предложений`;
+        showNotification('Premium подписка активна!', 'success');
+        
+        // Показываем модальное окно с информацией о подписке
+        showSubscriptionInfoModal();
+    } else {
+        showNotification('У вас нет активной Premium подписки', 'info');
+    }
+}
+
+// Показать модальное окно с информацией о подписке
+function showSubscriptionInfoModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2>Ваша Premium подписка</h2>
+            <div class="subscription-info">
+                <h3>✅ Активна</h3>
+                <p>Ваша Premium подписка активна и предоставляет все преимущества:</p>
+                <ul>
+                    <li>🚀 Неограниченные предложения</li>
+                    <li>🤖 Продвинутый AI (Yandex GPT/GigaChat)</li>
+                    <li>⚡ Приоритетная поддержка</li>
+                    <li>📤 Экспорт предложений</li>
+                    <li>📊 Расширенная аналитика</li>
+                </ul>
+                <button onclick="this.parentElement.parentElement.remove()" class="btn-primary">Понятно</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 }
 
 // Показать/скрыть загрузку
