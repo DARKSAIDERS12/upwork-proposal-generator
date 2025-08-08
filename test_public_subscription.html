@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Тест системы подписок - Публичный сайт</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .test-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid #007bff;
+        }
+        
+        .test-card h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+        }
+        
+        .btn.success {
+            background: #28a745;
+        }
+        
+        .btn.success:hover {
+            background: #1e7e34;
+        }
+        
+        .btn.danger {
+            background: #dc3545;
+        }
+        
+        .btn.danger:hover {
+            background: #c82333;
+        }
+        
+        .user-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Тест системы подписок</h1>
+            <p>Проверка работы системы подписок на публичном сайте</p>
+        </div>
+        
+        <div class="content">
+            <!-- Статистика -->
+            <div class="test-section">
+                <h3>📊 Статистика системы</h3>
+                <div class="stats" id="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">Всего пользователей</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="freeUsers">0</div>
+                        <div class="stat-label">Бесплатные</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="premiumUsers">0</div>
+                        <div class="stat-label">Premium</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalProposals">0</div>
+                        <div class="stat-label">Всего предложений</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Тестирование пользователей -->
+            <div class="test-section">
+                <h3>👥 Тестирование пользователей</h3>
+                <div class="test-grid">
+                    <div class="test-card">
+                        <h4>Создание тестовых пользователей</h4>
+                        <p>Создаем пользователей с разными типами подписок для тестирования</p>
+                        <button class="btn" onclick="createTestUsers()">Создать тестовых пользователей</button>
+                        <div id="createUsersResult"></div>
+                    </div>
+                    
+                    <div class="test-card">
+                        <h4>Проверка лимитов</h4>
+                        <p>Тестируем работу лимитов для разных типов подписок</p>
+                        <button class="btn" onclick="testLimits()">Проверить лимиты</button>
+                        <div id="limitsResult"></div>
+                    </div>
+                    
+                    <div class="test-card">
+                        <h4>Ежедневный сброс</h4>
+                        <p>Тестируем автоматический сброс ежедневных лимитов</p>
+                        <button class="btn" onclick="testDailyReset()">Тест сброса</button>
+                        <div id="resetResult"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Симуляция работы -->
+            <div class="test-section">
+                <h3>🎮 Симуляция работы сайта</h3>
+                <div class="test-grid">
+                    <div class="test-card">
+                        <h4>Генерация предложений</h4>
+                        <p>Симулируем генерацию предложений для разных пользователей</p>
+                        <button class="btn" onclick="simulateProposalGeneration()">Симулировать генерацию</button>
+                        <div id="generationResult"></div>
+                    </div>
+                    
+                    <div class="test-card">
+                        <h4>Обновление подписки</h4>
+                        <p>Тестируем процесс обновления до Premium</p>
+                        <button class="btn success" onclick="testUpgrade()">Тест обновления</button>
+                        <div id="upgradeResult"></div>
+                    </div>
+                    
+                    <div class="test-card">
+                        <h4>Очистка данных</h4>
+                        <p>Очищаем тестовые данные</p>
+                        <button class="btn danger" onclick="clearTestData()">Очистить данные</button>
+                        <div id="clearResult"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Лог событий -->
+            <div class="test-section">
+                <h3>📝 Лог событий</h3>
+                <div class="log" id="eventLog">
+                    <div>🚀 Тест системы подписок запущен...</div>
+                </div>
+                <button class="btn" onclick="clearLog()">Очистить лог</button>
+            </div>
+            
+            <!-- Текущее состояние -->
+            <div class="test-section">
+                <h3>🔍 Текущее состояние</h3>
+                <div class="user-info" id="currentState">
+                    Загрузка состояния...
+                </div>
+                <button class="btn" onclick="refreshState()">Обновить состояние</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let testUsers = [];
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🧪 Тест системы подписок инициализирован');
+            refreshState();
+            updateStats();
+        });
+        
+        // Функции логирования
+        function log(message) {
+            const logElement = document.getElementById('eventLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        function clearLog() {
+            document.getElementById('eventLog').innerHTML = '<div>🚀 Лог очищен...</div>';
+        }
+        
+        // Обновление статистики
+        function updateStats() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const proposals = JSON.parse(localStorage.getItem('proposalsHistory') || '[]');
+            
+            const freeUsers = users.filter(u => u.subscription === 'free').length;
+            const premiumUsers = users.filter(u => u.subscription === 'premium').length;
+            
+            document.getElementById('totalUsers').textContent = users.length;
+            document.getElementById('freeUsers').textContent = freeUsers;
+            document.getElementById('premiumUsers').textContent = premiumUsers;
+            document.getElementById('totalProposals').textContent = proposals.length;
+        }
+        
+        // Обновление состояния
+        function refreshState() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const proposals = JSON.parse(localStorage.getItem('proposalsHistory') || '[]');
+            
+            const stateElement = document.getElementById('currentState');
+            stateElement.innerHTML = `
+                <strong>Пользователи (${users.length}):</strong><br>
+                ${users.map(u => `- ${u.email} (${u.subscription}) - осталось: ${u.dailyRemaining}`).join('<br>')}
+                <br><br>
+                <strong>Предложения (${proposals.length}):</strong><br>
+                ${proposals.map(p => `- ${p.formData.title} (${new Date(p.date).toLocaleDateString()})`).join('<br>')}
+            `;
+            
+            updateStats();
+        }
+        
+        // Создание тестовых пользователей
+        function createTestUsers() {
+            const users = [
+                {
+                    id: Date.now() + 1,
+                    email: 'test_free@example.com',
+                    password: 'password123',
+                    subscription: 'free',
+                    dailyProposals: 3,
+                    dailyRemaining: 3,
+                    lastResetDate: new Date().toDateString(),
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: Date.now() + 2,
+                    email: 'test_premium@example.com',
+                    password: 'password123',
+                    subscription: 'premium',
+                    dailyProposals: 999,
+                    dailyRemaining: 999,
+                    lastResetDate: new Date().toDateString(),
+                    createdAt: new Date().toISOString()
+                },
+                {
+                    id: Date.now() + 3,
+                    email: 'test_expired@example.com',
+                    password: 'password123',
+                    subscription: 'free',
+                    dailyProposals: 3,
+                    dailyRemaining: 0,
+                    lastResetDate: new Date().toDateString(),
+                    createdAt: new Date().toISOString()
+                }
+            ];
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            testUsers = users;
+            
+            const resultElement = document.getElementById('createUsersResult');
+            resultElement.innerHTML = '<div class="status success">✅ Тестовые пользователи созданы</div>';
+            
+            log('👥 Создано 3 тестовых пользователя');
+            refreshState();
+        }
+        
+        // Тестирование лимитов
+        function testLimits() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const resultElement = document.getElementById('limitsResult');
+            let result = '';
+            
+            users.forEach(user => {
+                const canGenerate = user.subscription === 'premium' || user.dailyRemaining > 0;
+                const status = canGenerate ? 'success' : 'error';
+                const message = canGenerate ? '✅ Может генерировать' : '❌ Лимит исчерпан';
+                
+                result += `<div class="status ${status}">${user.email}: ${message}</div>`;
+            });
+            
+            resultElement.innerHTML = result;
+            log('🎯 Проверены лимиты для всех пользователей');
+        }
+        
+        // Тестирование ежедневного сброса
+        function testDailyReset() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const resultElement = document.getElementById('resetResult');
+            
+            users.forEach(user => {
+                if (user.subscription === 'free') {
+                    user.dailyRemaining = 3;
+                }
+                user.lastResetDate = new Date().toDateString();
+            });
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            resultElement.innerHTML = '<div class="status success">✅ Ежедневные лимиты сброшены</div>';
+            log('🔄 Выполнен ежедневный сброс лимитов');
+            refreshState();
+        }
+        
+        // Симуляция генерации предложений
+        function simulateProposalGeneration() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const resultElement = document.getElementById('generationResult');
+            let result = '';
+            
+            users.forEach(user => {
+                if (user.subscription === 'free' && user.dailyRemaining > 0) {
+                    user.dailyRemaining--;
+                    result += `<div class="status success">✅ ${user.email}: сгенерировано предложение (осталось: ${user.dailyRemaining})</div>`;
+                } else if (user.subscription === 'premium') {
+                    result += `<div class="status success">✅ ${user.email}: сгенерировано предложение (неограниченно)</div>`;
+                } else {
+                    result += `<div class="status error">❌ ${user.email}: лимит исчерпан</div>`;
+                }
+            });
+            
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            // Добавляем тестовое предложение в историю
+            const proposals = JSON.parse(localStorage.getItem('proposalsHistory') || '[]');
+            proposals.push({
+                id: Date.now(),
+                formData: {
+                    title: 'Тестовый проект',
+                    description: 'Описание тестового проекта',
+                    budget: '$1000-2000',
+                    specialization: 'Web Development',
+                    tone: 'Professional'
+                },
+                proposal: 'Это тестовое предложение для проверки системы.',
+                date: new Date().toISOString()
+            });
+            localStorage.setItem('proposalsHistory', JSON.stringify(proposals));
+            
+            resultElement.innerHTML = result;
+            log('🎮 Симулирована генерация предложений');
+            refreshState();
+        }
+        
+        // Тестирование обновления подписки
+        function testUpgrade() {
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const freeUser = users.find(u => u.subscription === 'free');
+            
+            if (freeUser) {
+                freeUser.subscription = 'premium';
+                freeUser.dailyRemaining = 999;
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                document.getElementById('upgradeResult').innerHTML = 
+                    '<div class="status success">✅ Пользователь обновлен до Premium</div>';
+                log(`⬆️ ${freeUser.email} обновлен до Premium`);
+                refreshState();
+            } else {
+                document.getElementById('upgradeResult').innerHTML = 
+                    '<div class="status error">❌ Нет пользователей для обновления</div>';
+            }
+        }
+        
+        // Очистка тестовых данных
+        function clearTestData() {
+            localStorage.removeItem('users');
+            localStorage.removeItem('proposalsHistory');
+            testUsers = [];
+            
+            document.getElementById('clearResult').innerHTML = 
+                '<div class="status info">🗑️ Тестовые данные очищены</div>';
+            log('🧹 Тестовые данные очищены');
+            refreshState();
+        }
+    </script>
+</body>
+</html> 
