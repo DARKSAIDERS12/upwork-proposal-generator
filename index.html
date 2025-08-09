@@ -72,13 +72,22 @@
             <!-- Subscription Status -->
             <div class="subscription-status" id="subscriptionStatus">
                 <div class="subscription-info">
-                    <h3>Ваша подписка</h3>
+                    <h3>🇷🇺 Ваша подписка</h3>
                     <div class="subscription-details">
-                        <span id="subscriptionType">Бесплатная</span>
+                        <span id="subscriptionType">Бесплатная (Демо)</span>
+                        <span id="aiProvider">AI: Демо-режим</span>
                         <span id="dailyRemaining">Осталось: 3 предложения</span>
                     </div>
+                    <div id="subscriptionInfo"></div>
                 </div>
-                <button onclick="showUpgradeModal()" class="btn-upgrade" id="upgradeBtn">Обновить до Premium</button>
+                <div class="subscription-actions">
+                    <button onclick="openSubscriptionManager()" class="btn-upgrade" id="upgradeBtn">
+                        🚀 Yandex GPT Premium
+                    </button>
+                    <button onclick="setupYandexGPTAPI()" class="btn-secondary" id="setupBtn" style="display: none;">
+                        ⚙️ Настроить API
+                    </button>
+                </div>
             </div>
 
             <!-- Proposal Generator -->

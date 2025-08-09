@@ -1,0 +1,51 @@
+{
+  "currency": "RUB",
+  "plans": {
+    "free": {
+      "price": 0,
+      "daily_limit": 3,
+      "ai_provider": "demo",
+      "features": [
+        "basic_templates",
+        "demo_generation"
+      ]
+    },
+    "premium": {
+      "price": 1500,
+      "daily_limit": 50,
+      "ai_provider": "yandex",
+      "features": [
+        "premium_templates",
+        "yandex_gpt",
+        "priority_support",
+        "export"
+      ]
+    },
+    "pro": {
+      "price": 3000,
+      "daily_limit": 200,
+      "ai_provider": "yandex",
+      "features": [
+        "all_templates",
+        "yandex_gpt",
+        "gigachat_backup",
+        "priority_support",
+        "export",
+        "analytics"
+      ]
+    },
+    "enterprise": {
+      "price": 9900,
+      "daily_limit": -1,
+      "ai_provider": "all",
+      "features": [
+        "all_templates",
+        "all_ai_providers",
+        "dedicated_support",
+        "export",
+        "analytics",
+        "api_access"
+      ]
+    }
+  }
+}
