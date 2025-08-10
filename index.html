@@ -17,6 +17,8 @@
             </div>
             <div class="user-info" id="userInfo" style="display: none;">
                 <span id="userEmail"></span>
+                <a href="subscription_manager.html" class="btn-secondary">⚙️ Управление подпиской</a>
+                <a href="yandex_gpt_setup.html" class="btn-secondary">🔑 Настройка API</a>
                 <button onclick="logout()" class="btn-secondary">Выйти</button>
             </div>
         </header>
@@ -27,6 +29,12 @@
                 <div class="auth-tabs">
                     <button class="tab-btn active" onclick="showTab('login')">Вход</button>
                     <button class="tab-btn" onclick="showTab('register')">Регистрация</button>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="quick-links">
+                    <a href="subscription_manager.html" class="quick-link">💰 Тарифы и подписки</a>
+                    <a href="yandex_gpt_setup.html" class="quick-link">🤖 Настройка Yandex GPT</a>
                 </div>
                 
                 <!-- Login Form -->

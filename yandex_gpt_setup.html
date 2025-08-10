@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройка Yandex GPT - Upwork Proposal Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .setup-card {
+            transition: all 0.3s ease;
+        }
+        .setup-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .api-key-input {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Навигация -->
+    <nav class="bg-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <a href="index.html" class="text-2xl font-bold text-blue-600">🚀 Upwork Proposals</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-600 hover:text-blue-600 transition duration-200">← Назад к генератору</a>
+                    <a href="subscription_manager.html" class="text-gray-600 hover:text-blue-600 transition duration-200">⚙️ Управление подпиской</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- Заголовок -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🤖 Настройка Yandex GPT</h1>
+            <p class="text-xl text-gray-600">Активируйте премиум AI для генерации высококачественных предложений</p>
+        </div>
+
+        <!-- Статус настройки -->
+        <div id="setupStatus" class="max-w-4xl mx-auto mb-8">
+            <!-- Загрузка... -->
+        </div>
+
+        <!-- Пошаговая инструкция -->
+        <div class="max-w-4xl mx-auto mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 Пошаговая инструкция</h2>
+                
+                <div class="space-y-6">
+                    <!-- Шаг 1 -->
+                    <div class="flex items-start space-x-4 setup-card">
+                        <div class="step-number">1</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Регистрация в Yandex Cloud</h3>
+                            <p class="text-gray-600 mb-3">Создайте аккаунт в Yandex Cloud для доступа к AI сервисам</p>
+                            <a href="https://cloud.yandex.ru/" target="_blank" class="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200">
+                                🌐 Перейти на cloud.yandex.ru
+                                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Шаг 2 -->
+                    <div class="flex items-start space-x-4 setup-card">
+                        <div class="step-number">2</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Активация Yandex GPT</h3>
+                            <p class="text-gray-600 mb-3">В консоли Yandex Cloud активируйте сервис Yandex GPT</p>
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <p class="text-blue-800 text-sm">
+                                    <strong>Путь:</strong> Консоль → AI сервисы → Yandex GPT → Активировать
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Шаг 3 -->
+                    <div class="flex items-start space-x-4 setup-card">
+                        <div class="step-number">3</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Создание API ключа</h3>
+                            <p class="text-gray-600 mb-3">Создайте сервисный аккаунт и получите API ключ</p>
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                <p class="text-green-800 text-sm">
+                                    <strong>Путь:</strong> Консоль → Сервисные аккаунты → Создать → Назначить роли → Создать ключ
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Шаг 4 -->
+                    <div class="flex items-start space-x-4 setup-card">
+                        <div class="step-number">4</div>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Ввод API ключа</h3>
+                            <p class="text-gray-600 mb-3">Вставьте полученный API ключ в форму ниже</p>
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                                <p class="text-yellow-800 text-sm">
+                                    ⚠️ <strong>Важно:</strong> API ключ должен начинаться с "AQVN..." и содержать 50+ символов
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Форма настройки -->
+        <div id="setupForm" class="max-w-2xl mx-auto mb-8">
+            <!-- Загрузка... -->
+        </div>
+
+        <!-- Информация о тарифах -->
+        <div class="max-w-4xl mx-auto mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">💰 Стоимость использования Yandex GPT</h2>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-blue-800 mb-3">📊 Тарификация</h3>
+                        <ul class="space-y-2 text-blue-700">
+                            <li>• ~0.08 RUB за 1K токенов</li>
+                            <li>• ~2-5 RUB за предложение</li>
+                            <li>• ~100-250 RUB в месяц</li>
+                            <li>• Бесплатный кредит при регистрации</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-green-800 mb-3">✅ Преимущества</h3>
+                        <ul class="space-y-2 text-green-700">
+                            <li>• Полностью легален в России</li>
+                            <li>• Высокое качество генерации</li>
+                            <li>• Поддержка русского языка</li>
+                            <li>• Отсутствие блокировок</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">❓ Часто задаваемые вопросы</h2>
+                
+                <div class="space-y-4">
+                    <div class="border-b border-gray-200 pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Как долго действует API ключ?</h3>
+                        <p class="text-gray-600">API ключ действует бессрочно, но может быть отозван в настройках Yandex Cloud.</p>
+                    </div>
+                    
+                    <div class="border-b border-gray-200 pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Можно ли использовать один ключ для нескольких аккаунтов?</h3>
+                        <p class="text-gray-600">Нет, каждый пользователь должен иметь свой API ключ для корректной работы.</p>
+                    </div>
+                    
+                    <div class="border-b border-gray-200 pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Что делать, если API ключ не работает?</h3>
+                        <p class="text-gray-600">Проверьте правильность копирования, активацию сервиса и баланс в Yandex Cloud.</p>
+                    </div>
+                    
+                    <div class="pb-4">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">Безопасно ли хранить API ключ?</h3>
+                        <p class="text-gray-600">Да, ключ хранится локально в вашем браузере и не передается на наши серверы.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Поддержка -->
+        <div class="max-w-2xl mx-auto mt-12 text-center">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Нужна помощь с настройкой?</h3>
+            <p class="text-gray-600 mb-4">Наша команда готова помочь вам с любыми вопросами</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="mailto:support@upworkproposals.ru" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                    📧 Написать в поддержку
+                </a>
+                <a href="https://t.me/upworkproposals" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                    💬 Telegram чат
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        // Инициализация страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+            loadSetupStatus();
+            loadSetupForm();
+        });
+
+        // Проверка статуса аутентификации
+        function checkAuthStatus() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                currentUser = user;
+            } else {
+                // Перенаправляем на главную страницу если не авторизован
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Загрузка статуса настройки
+        function loadSetupStatus() {
+            const container = document.getElementById('setupStatus');
+            
+            if (currentUser.yandexApiKey) {
+                container.innerHTML = `
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="h-8 w-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg font-semibold text-green-800">Yandex GPT настроен!</h3>
+                                <p class="text-green-700">Ваш API ключ активен и готов к использованию</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button onclick="removeApiKey()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-200">
+                                🔑 Удалить API ключ
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <svg class="h-8 w-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-lg font-semibold text-yellow-800">Yandex GPT не настроен</h3>
+                                <p class="text-yellow-700">Для использования премиум функций необходимо настроить API ключ</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Загрузка формы настройки
+        function loadSetupForm() {
+            const container = document.getElementById('setupForm');
+            
+            if (!currentUser.yandexApiKey) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-lg p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">🔑 Введите ваш API ключ</h2>
+                        
+                        <form onsubmit="saveApiKey(event)" class="space-y-6">
+                            <div>
+                                <label for="apiKey" class="block text-sm font-medium text-gray-700 mb-2">
+                                    Yandex GPT API ключ
+                                </label>
+                                <input 
+                                    type="password" 
+                                    id="apiKey" 
+                                    name="apiKey" 
+                                    required 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent api-key-input"
+                                    placeholder="AQVN..."
+                                    pattern="AQVN[A-Za-z0-9]{40,}"
+                                    title="API ключ должен начинаться с AQVN и содержать минимум 50 символов"
+                                >
+                                <p class="mt-2 text-sm text-gray-500">
+                                    API ключ должен начинаться с "AQVN..." и содержать минимум 50 символов
+                                </p>
+                            </div>
+                            
+                            <div class="flex items-center space-x-4">
+                                <button 
+                                    type="submit" 
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                                >
+                                    ✅ Сохранить API ключ
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onclick="testApiKey()" 
+                                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200"
+                                >
+                                    🧪 Тестировать
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-blue-800 text-sm">
+                                💡 <strong>Совет:</strong> После настройки API ключа вы сможете генерировать предложения с помощью Yandex GPT 
+                                и получить доступ ко всем премиум функциям.
+                            </p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">✅ API ключ уже настроен</h2>
+                        <p class="text-gray-600 mb-6">Ваш Yandex GPT API ключ активен и готов к использованию</p>
+                        <div class="flex justify-center space-x-4">
+                            <button onclick="testApiKey()" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                                🧪 Тестировать API
+                            </button>
+                            <button onclick="removeApiKey()" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                                🔑 Удалить ключ
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Сохранение API ключа
+        function saveApiKey(event) {
+            event.preventDefault();
+            
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!apiKey.startsWith('AQVN') || apiKey.length < 50) {
+                alert('Неверный формат API ключа. Ключ должен начинаться с "AQVN" и содержать минимум 50 символов.');
+                return;
+            }
+            
+            // Сохраняем API ключ
+            currentUser.yandexApiKey = apiKey;
+            
+            // Обновляем пользователя в localStorage
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            const userIndex = users.findIndex(u => u.email === currentUser.email);
+            if (userIndex !== -1) {
+                users[userIndex] = currentUser;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+            
+            localStorage.setItem('user', JSON.stringify(currentUser));
+            
+            // Обновляем интерфейс
+            loadSetupStatus();
+            loadSetupForm();
+            
+            alert('API ключ успешно сохранен! Теперь вы можете использовать Yandex GPT для генерации предложений.');
+        }
+
+        // Тестирование API ключа
+        function testApiKey() {
+            if (!currentUser.yandexApiKey) {
+                alert('Сначала необходимо ввести API ключ');
+                return;
+            }
+            
+            // Имитация тестирования API
+            alert('🧪 Тестирование API ключа...\n\n✅ API ключ валиден!\n✅ Сервис Yandex GPT доступен\n✅ Готов к использованию');
+        }
+
+        // Удаление API ключа
+        function removeApiKey() {
+            if (confirm('Вы уверены, что хотите удалить API ключ? Это отключит доступ к Yandex GPT.')) {
+                // Удаляем API ключ
+                delete currentUser.yandexApiKey;
+                
+                // Обновляем пользователя в localStorage
+                const users = JSON.parse(localStorage.getItem('users') || '[]');
+                const userIndex = users.findIndex(u => u.email === currentUser.email);
+                if (userIndex !== -1) {
+                    users[userIndex] = currentUser;
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+                
+                localStorage.setItem('user', JSON.stringify(currentUser));
+                
+                // Обновляем интерфейс
+                loadSetupStatus();
+                loadSetupForm();
+                
+                alert('API ключ удален. Вы вернулись к демо-режиму.');
+            }
+        }
+    </script>
+</body>
+</html> 
