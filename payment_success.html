@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата успешна - Upwork Proposal Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .success-animation {
+            animation: successPulse 2s ease-in-out;
+        }
+        @keyframes successPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Заголовок -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🎉 Оплата прошла успешно!</h1>
+            <p class="text-xl text-gray-600">Ваша подписка активирована</p>
+        </div>
+
+        <!-- Карточка успеха -->
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 mb-8">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 success-animation">
+                    <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-2">Подписка активирована!</h2>
+                <p class="text-gray-600">Теперь у вас есть доступ ко всем премиум функциям</p>
+            </div>
+
+            <!-- Информация о подписке -->
+            <div id="subscriptionInfo" class="bg-gray-50 rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Детали подписки:</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">План:</span>
+                        <span id="planType" class="font-semibold text-gray-800">Загрузка...</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Статус:</span>
+                        <span class="text-green-600 font-semibold">Активна</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Действует до:</span>
+                        <span id="expiryDate" class="font-semibold text-gray-800">Загрузка...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Кнопки действий -->
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="index.html" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition duration-200">
+                    🚀 Начать работу
+                </a>
+                <a href="subscription_manager.html" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg text-center transition duration-200">
+                    ⚙️ Управление подпиской
+                </a>
+            </div>
+        </div>
+
+        <!-- Информация о функциях -->
+        <div class="max-w-4xl mx-auto">
+            <h3 class="text-2xl font-bold text-gray-800 text-center mb-6">Что теперь доступно:</h3>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">🤖</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Yandex GPT</h4>
+                    <p class="text-gray-600">Доступ к мощному российскому AI для генерации предложений</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Расширенные лимиты</h4>
+                    <p class="text-gray-600">Больше предложений в день для ваших проектов</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">💎</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Премиум шаблоны</h4>
+                    <p class="text-gray-600">Эксклюзивные шаблоны для разных типов проектов</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">📤</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Экспорт</h4>
+                    <p class="text-gray-600">Сохранение и экспорт ваших предложений</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">🎯</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Приоритетная поддержка</h4>
+                    <p class="text-gray-600">Быстрые ответы на ваши вопросы</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">🚀</span>
+                    </div>
+                    <h4 class="text-lg font-semibold text-gray-800 mb-2">Быстрая генерация</h4>
+                    <p class="text-gray-600">Мгновенное создание качественных предложений</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Поддержка -->
+        <div class="max-w-2xl mx-auto mt-12 text-center">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">Нужна помощь?</h3>
+            <p class="text-gray-600 mb-4">Наша команда готова помочь вам с любыми вопросами</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="mailto:support@upworkproposals.ru" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                    📧 Написать в поддержку
+                </a>
+                <a href="https://t.me/upworkproposals" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                    💬 Telegram чат
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Получаем параметры из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const planType = urlParams.get('plan');
+        
+        // Обновляем информацию о подписке
+        if (planType) {
+            const planNames = {
+                'premium': 'Premium',
+                'pro': 'Pro', 
+                'enterprise': 'Enterprise'
+            };
+            
+            document.getElementById('planType').textContent = planNames[planType] || planType;
+            
+            // Устанавливаем дату окончания (30 дней от текущей)
+            const expiryDate = new Date();
+            expiryDate.setDate(expiryDate.getDate() + 30);
+            document.getElementById('expiryDate').textContent = expiryDate.toLocaleDateString('ru-RU');
+        }
+        
+        // Сохраняем информацию о подписке в localStorage
+        if (planType) {
+            localStorage.setItem('subscription_status', planType);
+            localStorage.setItem('subscription_expires', new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString());
+            
+            // Сбрасываем дневные лимиты
+            localStorage.setItem('daily_proposals_count', '0');
+            localStorage.setItem('last_proposal_date', new Date().toDateString());
+        }
+        
+        // Анимация появления
+        document.addEventListener('DOMContentLoaded', function() {
+            const elements = document.querySelectorAll('.bg-white');
+            elements.forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(20px)';
+                    el.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        el.style.opacity = '1';
+                        el.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html> 

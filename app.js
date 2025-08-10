@@ -25,9 +25,6 @@ function initializeSubscriptionSystem() {
     
     // Устанавливаем интервал для ежедневного сброса (каждые 24 часа)
     setInterval(checkAndResetDailyLimits, 24 * 60 * 60 * 1000);
-    
-    // Инициализируем русскую премиум систему
-    initializeRussianPremiumAI();
 }
 
 // Проверка и сброс ежедневных лимитов
@@ -199,9 +196,11 @@ function updateSubscriptionStatus() {
     const dailyRemaining = document.getElementById('dailyRemaining');
     const upgradeBtn = document.getElementById('upgradeBtn');
     
-    if (currentUser.subscription === 'premium') {
-        subscriptionType.textContent = 'Premium';
-        dailyRemaining.textContent = 'Неограниченно';
+    const subscriptionInfo = getSubscriptionInfo(currentUser.subscription);
+    
+    if (currentUser.subscription && currentUser.subscription !== 'free') {
+        subscriptionType.textContent = subscriptionInfo.name;
+        dailyRemaining.textContent = currentUser.dailyRemaining === -1 ? 'Безлимитно' : `Осталось: ${currentUser.dailyRemaining} предложений`;
         upgradeBtn.textContent = 'Управлять подпиской';
         upgradeBtn.onclick = manageSubscription;
     } else {
@@ -210,6 +209,38 @@ function updateSubscriptionStatus() {
         upgradeBtn.textContent = 'Обновить до Premium';
         upgradeBtn.onclick = showUpgradeModal;
     }
+}
+
+// Получить информацию о подписке
+function getSubscriptionInfo(subscriptionType) {
+    const subscriptionData = {
+        'free': {
+            name: 'Бесплатная',
+            aiProvider: 'Демо-режим',
+            dailyLimit: 3,
+            price: '0 ₽'
+        },
+        'premium': {
+            name: 'Premium',
+            aiProvider: 'Yandex GPT',
+            dailyLimit: 50,
+            price: '1,500 ₽'
+        },
+        'pro': {
+            name: 'Pro',
+            aiProvider: 'Yandex GPT + GigaChat',
+            dailyLimit: 200,
+            price: '3,000 ₽'
+        },
+        'enterprise': {
+            name: 'Enterprise',
+            aiProvider: 'Все AI провайдеры',
+            dailyLimit: '∞',
+            price: '9,900 ₽'
+        }
+    };
+    
+    return subscriptionData[subscriptionType] || subscriptionData['free'];
 }
 
 // Генерация предложения
@@ -441,11 +472,220 @@ function closeUpgradeModal() {
 // Начать подписку
 async function startSubscription() {
     try {
-        // Для демо-версии обновляем статус вручную
-        currentUser.subscription = 'premium';
-        currentUser.dailyRemaining = 999; // Неограниченно для premium
+        // Показываем выбор тарифа
+        showRussianPricingModal();
         
-        // Обновляем пользователя в списке
+    } catch (error) {
+        showNotification('Ошибка создания подписки: ' + error.message, 'error');
+    }
+}
+
+// Показать модальное окно с российскими тарифами
+function showRussianPricingModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content max-w-4xl">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2 class="text-2xl font-bold mb-6">🇷🇺 Выберите тарифный план</h2>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-6">
+                <!-- Premium план -->
+                <div class="border-2 border-blue-200 rounded-lg p-6 hover:border-blue-400 transition-colors">
+                    <div class="text-center mb-4">
+                        <h3 class="text-xl font-semibold text-blue-600">Premium</h3>
+                        <div class="text-3xl font-bold text-gray-800">1,500 ₽</div>
+                        <div class="text-gray-600">в месяц</div>
+                    </div>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            50 предложений/день
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Yandex GPT
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Премиум шаблоны
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Экспорт
+                        </li>
+                    </ul>
+                    <button onclick="selectPlan('premium', 1500)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                        Выбрать Premium
+                    </button>
+                </div>
+                
+                <!-- Pro план -->
+                <div class="border-2 border-purple-200 rounded-lg p-6 hover:border-purple-400 transition-colors">
+                    <div class="text-center mb-4">
+                        <h3 class="text-xl font-semibold text-purple-600">Pro</h3>
+                        <div class="text-3xl font-bold text-gray-800">3,000 ₽</div>
+                        <div class="text-gray-600">в месяц</div>
+                    </div>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            200 предложений/день
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Yandex GPT + GigaChat
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Все шаблоны
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Аналитика
+                        </li>
+                    </ul>
+                    <button onclick="selectPlan('pro', 3000)" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                        Выбрать Pro
+                    </button>
+                </div>
+                
+                <!-- Enterprise план -->
+                <div class="border-2 border-green-200 rounded-lg p-6 hover:border-green-400 transition-colors">
+                    <div class="text-center mb-4">
+                        <h3 class="text-xl font-semibold text-green-600">Enterprise</h3>
+                        <div class="text-3xl font-bold text-gray-800">9,900 ₽</div>
+                        <div class="text-gray-600">в месяц</div>
+                    </div>
+                    <ul class="space-y-2 mb-6">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Безлимитные предложения
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Все AI провайдеры
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            API доступ
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Персональная поддержка
+                        </li>
+                    </ul>
+                    <button onclick="selectPlan('enterprise', 9900)" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                        Выбрать Enterprise
+                    </button>
+                </div>
+            </div>
+            
+            <div class="text-center text-gray-600">
+                <p>💳 Оплата через ЮKassa (безопасно)</p>
+                <p>🔄 Автоматическое продление каждый месяц</p>
+                <p>❌ Отмена в любое время</p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// Выбор тарифного плана
+function selectPlan(planType, price) {
+    // Закрываем модальное окно
+    document.querySelector('.modal').remove();
+    
+    // Показываем форму оплаты
+    showPaymentForm(planType, price);
+}
+
+// Показать форму оплаты
+function showPaymentForm(planType, price) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.innerHTML = `
+        <div class="modal-content max-w-2xl">
+            <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+            <h2 class="text-2xl font-bold mb-6">💳 Оплата подписки ${planType.toUpperCase()}</h2>
+            
+            <div class="bg-gray-50 rounded-lg p-6 mb-6">
+                <div class="text-center mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">${planType.toUpperCase()}</h3>
+                    <div class="text-3xl font-bold text-blue-600">${price.toLocaleString()} ₽</div>
+                    <div class="text-gray-600">в месяц</div>
+                </div>
+            </div>
+            
+            <form id="paymentForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email для чека</label>
+                    <input type="email" id="paymentEmail" value="${currentUser.email}" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Имя на карте</label>
+                    <input type="text" id="cardName" placeholder="Иван Иванов" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Номер карты</label>
+                    <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Срок действия</label>
+                        <input type="text" id="cardExpiry" placeholder="MM/YY" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CVV</label>
+                        <input type="text" id="cardCvv" placeholder="123" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                    💳 Оплатить ${price.toLocaleString()} ₽
+                </button>
+            </form>
+            
+            <div class="text-center mt-4 text-sm text-gray-500">
+                🔒 Безопасная оплата через ЮKassa
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Обработка отправки формы
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        processPayment(planType, price);
+    });
+}
+
+// Обработка платежа
+async function processPayment(planType, price) {
+    try {
+        showLoading(true);
+        
+        // Имитация обработки платежа
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Активируем подписку
+        currentUser.subscription = planType;
+        currentUser.subscriptionExpires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        
+        // Устанавливаем дневные лимиты
+        const dailyLimits = {
+            'premium': 50,
+            'pro': 200,
+            'enterprise': -1
+        };
+        currentUser.dailyRemaining = dailyLimits[planType];
+        
+        // Обновляем пользователя
         const users = JSON.parse(localStorage.getItem('users') || '[]');
         const userIndex = users.findIndex(u => u.email === currentUser.email);
         if (userIndex !== -1) {
@@ -455,48 +695,117 @@ async function startSubscription() {
         
         localStorage.setItem('user', JSON.stringify(currentUser));
         updateSubscriptionStatus();
-        closeUpgradeModal();
         
-        showNotification('Подписка Premium активирована! Теперь у вас неограниченный доступ.', 'success');
+        // Закрываем модальное окно
+        document.querySelector('.modal').remove();
+        
+        // Показываем уведомление об успехе
+        showNotification(`Подписка ${planType.toUpperCase()} активирована!`, 'success');
+        
+        // Перенаправляем на страницу успеха
+        setTimeout(() => {
+            window.location.href = `payment_success.html?plan=${planType}`;
+        }, 1000);
         
     } catch (error) {
-        showNotification('Ошибка создания подписки: ' + error.message, 'error');
+        showNotification('Ошибка обработки платежа: ' + error.message, 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
 // Управление подпиской
 function manageSubscription() {
-    if (currentUser && currentUser.subscription === 'premium') {
-        const message = `Ваша Premium подписка активна!\n\nПреимущества:\n✅ Неограниченные предложения\n✅ Продвинутый AI\n✅ Приоритетная поддержка\n✅ Экспорт предложений`;
-        showNotification('Premium подписка активна!', 'success');
+    if (currentUser && currentUser.subscription && currentUser.subscription !== 'free') {
+        const subscriptionInfo = getSubscriptionInfo(currentUser.subscription);
+        showNotification(`${subscriptionInfo.name} подписка активна!`, 'success');
         
         // Показываем модальное окно с информацией о подписке
         showSubscriptionInfoModal();
     } else {
-        showNotification('У вас нет активной Premium подписки', 'info');
+        showNotification('У вас нет активной подписки', 'info');
     }
 }
 
 // Показать модальное окно с информацией о подписке
 function showSubscriptionInfoModal() {
+    const subscriptionInfo = getSubscriptionInfo(currentUser.subscription);
+    
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.style.display = 'flex';
     modal.innerHTML = `
-        <div class="modal-content">
+        <div class="modal-content max-w-2xl">
             <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
-            <h2>Ваша Premium подписка</h2>
+            <h2 class="text-2xl font-bold mb-6">Ваша ${subscriptionInfo.name} подписка</h2>
             <div class="subscription-info">
-                <h3>✅ Активна</h3>
-                <p>Ваша Premium подписка активна и предоставляет все преимущества:</p>
-                <ul>
-                    <li>🚀 Неограниченные предложения</li>
-                    <li>🤖 Продвинутый AI (Yandex GPT/GigaChat)</li>
-                    <li>⚡ Приоритетная поддержка</li>
-                    <li>📤 Экспорт предложений</li>
-                    <li>📊 Расширенная аналитика</li>
-                </ul>
-                <button onclick="this.parentElement.parentElement.remove()" class="btn-primary">Понятно</button>
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                    <h3 class="text-lg font-semibold">✅ Активна</h3>
+                    <p>Ваша ${subscriptionInfo.name} подписка активна и предоставляет все преимущества:</p>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-blue-800 mb-2">📊 Лимиты</h4>
+                        <p class="text-blue-700">Дневной лимит: ${subscriptionInfo.dailyLimit === '∞' ? 'Безлимитно' : subscriptionInfo.dailyLimit + ' предложений'}</p>
+                    </div>
+                    
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-purple-800 mb-2">🤖 AI Провайдер</h4>
+                        <p class="text-purple-700">${subscriptionInfo.aiProvider}</p>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                    <h4 class="font-semibold text-gray-800 mb-2">🚀 Преимущества:</h4>
+                    <ul class="space-y-2 text-gray-700">
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            ${subscriptionInfo.dailyLimit === '∞' ? 'Безлимитные предложения' : subscriptionInfo.dailyLimit + ' предложений в день'}
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            ${subscriptionInfo.aiProvider}
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Премиум шаблоны
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Экспорт предложений
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Приоритетная поддержка
+                        </li>
+                        ${subscriptionInfo.name === 'Pro' || subscriptionInfo.name === 'Enterprise' ? `
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Расширенная аналитика
+                        </li>
+                        ` : ''}
+                        ${subscriptionInfo.name === 'Enterprise' ? `
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            API доступ
+                        </li>
+                        <li class="flex items-center">
+                            <span class="text-green-500 mr-2">✅</span>
+                            Персональная поддержка
+                        </li>
+                        ` : ''}
+                    </ul>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button onclick="this.parentElement.parentElement.remove()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                        Понятно
+                    </button>
+                    <button onclick="window.open('subscription_manager.html', '_blank')" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+                        Управление подпиской
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -527,325 +836,4 @@ window.onclick = function(event) {
     if (event.target === modal) {
         closeUpgradeModal();
     }
-}
-
-// ===============================
-// РУССКАЯ ПРЕМИУМ AI СИСТЕМА
-// ===============================
-
-// Инициализация русской премиум AI системы
-function initializeRussianPremiumAI() {
-    console.log('🇷🇺 Инициализация русской премиум AI системы...');
-    
-    // Проверяем, настроен ли Yandex GPT API
-    checkYandexGPTSetup();
-    
-    // Обновляем интерфейс в зависимости от подписки
-    updatePremiumInterface();
-}
-
-// Проверка настройки Yandex GPT
-function checkYandexGPTSetup() {
-    const yandexApiKey = localStorage.getItem('yandex_api_key');
-    const setupStatus = localStorage.getItem('yandex_setup_status');
-    
-    if (!yandexApiKey || yandexApiKey === 'your-yandex-api-key-here') {
-        console.log('⚠️ Yandex GPT не настроен');
-        showYandexSetupNotification();
-    } else {
-        console.log('✅ Yandex GPT настроен');
-    }
-}
-
-// Показать уведомление о настройке Yandex GPT
-function showYandexSetupNotification() {
-    const notification = document.createElement('div');
-    notification.className = 'premium-notification';
-    notification.innerHTML = `
-        <div style="background: linear-gradient(135deg, #3498db, #2980b9); 
-                    color: white; padding: 15px; border-radius: 10px; 
-                    margin: 10px; position: fixed; top: 20px; right: 20px; 
-                    z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-            <h4 style="margin: 0 0 10px 0;">🇷🇺 Настройте Yandex GPT для премиум функций!</h4>
-            <p style="margin: 0 0 10px 0;">Получите доступ к высококачественной генерации предложений</p>
-            <button onclick="openSubscriptionManager()" 
-                    style="background: white; color: #3498db; border: none; 
-                           padding: 8px 16px; border-radius: 5px; cursor: pointer; 
-                           font-weight: bold;">
-                Настроить сейчас
-            </button>
-            <button onclick="this.parentElement.parentElement.remove()" 
-                    style="background: transparent; color: white; border: 1px solid white; 
-                           padding: 8px 16px; border-radius: 5px; cursor: pointer; 
-                           margin-left: 10px;">
-                Позже
-            </button>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    // Автоматически скрываем через 10 секунд
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 10000);
-}
-
-// Открыть менеджер подписок
-function openSubscriptionManager() {
-    window.open('subscription_manager.html', '_blank');
-}
-
-// Обновление премиум интерфейса
-function updatePremiumInterface() {
-    if (!currentUser) return;
-    
-    const subscriptionType = currentUser.subscription || 'free';
-    const isFreeTier = subscriptionType === 'free';
-    
-    // Обновляем статус подписки в интерфейсе
-    updateSubscriptionStatusInUI(subscriptionType);
-    
-    // Показываем премиум функции для платных пользователей
-    showPremiumFeatures(!isFreeTier);
-}
-
-// Обновление статуса подписки в UI
-function updateSubscriptionStatusInUI(subscriptionType) {
-    const subscriptionInfo = document.getElementById('subscriptionInfo');
-    if (subscriptionInfo) {
-        const subscriptionNames = {
-            'free': 'Бесплатный',
-            'premium': 'Премиум (Yandex GPT)',
-            'pro': 'Профессиональный',
-            'enterprise': 'Корпоративный'
-        };
-        
-        const aiProviders = {
-            'free': 'Демо',
-            'premium': 'Yandex GPT',
-            'pro': 'Yandex GPT + GigaChat',
-            'enterprise': 'Все AI провайдеры'
-        };
-        
-        subscriptionInfo.innerHTML = `
-            <div style="padding: 10px; background: #f8f9fa; border-radius: 5px; margin: 10px 0;">
-                <strong>План:</strong> ${subscriptionNames[subscriptionType] || subscriptionType}
-                <br>
-                <strong>AI:</strong> ${aiProviders[subscriptionType] || 'Демо'}
-                <br>
-                <strong>Остается сегодня:</strong> ${currentUser.dailyRemaining || 0}
-                ${subscriptionType === 'free' ? 
-                    '<br><button onclick="openSubscriptionManager()" style="margin-top: 5px; background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Улучшить план</button>' 
-                    : ''}
-            </div>
-        `;
-    }
-}
-
-// Показать премиум функции
-function showPremiumFeatures(isPremium) {
-    const premiumElements = document.querySelectorAll('.premium-feature');
-    premiumElements.forEach(element => {
-        element.style.display = isPremium ? 'block' : 'none';
-    });
-    
-    // Добавляем индикаторы премиум функций
-    if (isPremium) {
-        addPremiumIndicators();
-    }
-}
-
-// Добавить индикаторы премиум функций
-function addPremiumIndicators() {
-    const generateBtn = document.querySelector('#generateBtn');
-    if (generateBtn && !generateBtn.querySelector('.premium-badge')) {
-        const badge = document.createElement('span');
-        badge.className = 'premium-badge';
-        badge.innerHTML = '🚀 Yandex GPT';
-        badge.style.cssText = `
-            background: #27ae60; 
-            color: white; 
-            font-size: 0.7em; 
-            padding: 2px 6px; 
-            border-radius: 10px; 
-            margin-left: 5px;
-        `;
-        generateBtn.appendChild(badge);
-    }
-}
-
-// Генерация предложения с русской премиум AI
-async function generateProposalWithRussianAI(projectData) {
-    const subscriptionType = currentUser?.subscription || 'free';
-    
-    // Проверяем лимиты
-    if (!canGenerateProposal()) {
-        showUpgradeModal();
-        return null;
-    }
-    
-    // Показываем индикатор загрузки
-    showLoadingIndicator(subscriptionType);
-    
-    try {
-        // Для бесплатного плана используем демо-генерацию
-        if (subscriptionType === 'free') {
-            return await generateDemoProposal(projectData);
-        }
-        
-        // Для премиум планов пытаемся использовать Yandex GPT
-        const yandexApiKey = localStorage.getItem('yandex_api_key');
-        if (yandexApiKey && yandexApiKey !== 'your-yandex-api-key-here') {
-            return await generateYandexGPTProposal(projectData, yandexApiKey);
-        } else {
-            // Fallback к демо если API ключ не настроен
-            showNotification('⚠️ Yandex GPT не настроен. Используется демо-режим.', 'warning');
-            return await generateDemoProposal(projectData);
-        }
-        
-    } catch (error) {
-        console.error('Ошибка генерации:', error);
-        showNotification('❌ Ошибка генерации предложения', 'error');
-        return null;
-    } finally {
-        hideLoadingIndicator();
-    }
-}
-
-// Показать индикатор загрузки с информацией о AI
-function showLoadingIndicator(subscriptionType) {
-    const aiProviders = {
-        'free': 'Демо-генерация',
-        'premium': 'Yandex GPT генерирует предложение...',
-        'pro': 'Yandex GPT генерирует предложение...',
-        'enterprise': 'AI генерирует предложение...'
-    };
-    
-    const loadingText = aiProviders[subscriptionType] || 'Генерация предложения...';
-    
-    const existingLoader = document.querySelector('.loading-indicator');
-    if (existingLoader) {
-        existingLoader.querySelector('.loading-text').textContent = loadingText;
-    } else {
-        const loader = document.createElement('div');
-        loader.className = 'loading-indicator';
-        loader.innerHTML = `
-            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                        background: white; padding: 30px; border-radius: 10px; 
-                        box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 2000;
-                        text-align: center;">
-                <div class="spinner" style="width: 40px; height: 40px; border: 4px solid #f3f3f3;
-                                          border-top: 4px solid #3498db; border-radius: 50%;
-                                          animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
-                <div class="loading-text">${loadingText}</div>
-            </div>
-            <style>
-                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-            </style>
-        `;
-        document.body.appendChild(loader);
-    }
-}
-
-// Скрыть индикатор загрузки
-function hideLoadingIndicator() {
-    const loader = document.querySelector('.loading-indicator');
-    if (loader) {
-        loader.remove();
-    }
-}
-
-// Генерация с помощью Yandex GPT
-async function generateYandexGPTProposal(projectData, apiKey) {
-    // Создаем промпт для Yandex GPT
-    const prompt = createYandexGPTPrompt(projectData);
-    
-    // Симуляция запроса к Yandex GPT (в реальности это будет запрос к backend)
-    await new Promise(resolve => setTimeout(resolve, 2000)); // Имитация задержки
-    
-    // Возвращаем сгенерированное предложение
-    return `[🚀 Сгенерировано с помощью Yandex GPT]
-
-Здравствуйте!
-
-Меня заинтересовал ваш проект "${projectData.title}". 
-
-Как опытный специалист в области ${projectData.specialization.toLowerCase()}, я готов реализовать высококачественное решение в рамках вашего бюджета ${projectData.budget}.
-
-Основываясь на описании: "${projectData.description}", я предлагаю следующий подход:
-
-1. Детальный анализ требований и технических особенностей
-2. Разработка архитектуры решения с учетом современных стандартов
-3. Поэтапная реализация с регулярной обратной связью
-4. Тестирование и оптимизация производительности
-5. Передача готового проекта с документацией
-
-Мой опыт включает работу с современными технологиями и успешную реализацию аналогичных проектов. Готов предоставить портфолио и обсудить детали в удобное для вас время.
-
-Предлагаю начать с детального обсуждения технических требований. Уверен, что смогу превзойти ваши ожидания!
-
-С уважением,
-[Ваше имя]
-
-P.S. Готов предоставить дополнительные примеры работ и рекомендации от предыдущих клиентов.`;
-}
-
-// Создание промпта для Yandex GPT
-function createYandexGPTPrompt(projectData) {
-    return `Создай профессиональное предложение для фриланс-проекта на Upwork.
-
-Данные проекта:
-- Название: ${projectData.title}
-- Описание: ${projectData.description}  
-- Бюджет: ${projectData.budget}
-- Специализация: ${projectData.specialization}
-- Тон: ${projectData.tone}
-
-Требования к предложению:
-- Профессиональный тон общения
-- Демонстрация экспертизы в области
-- Конкретный план работы
-- Упоминание опыта и портфолио
-- Призыв к действию
-- Длина: 200-300 слов
-
-Предложение должно быть написано на русском языке и адаптировано для российского рынка фриланса.`;
-}
-
-// Настройка Yandex GPT API ключа
-function setupYandexGPTAPI() {
-    const apiKey = prompt('Введите ваш Yandex GPT API ключ:');
-    if (apiKey && apiKey.trim() !== '') {
-        localStorage.setItem('yandex_api_key', apiKey.trim());
-        localStorage.setItem('yandex_setup_status', 'configured');
-        
-        showNotification('✅ Yandex GPT успешно настроен!', 'success');
-        updatePremiumInterface();
-        
-        // Скрываем уведомления о настройке
-        const notifications = document.querySelectorAll('.premium-notification');
-        notifications.forEach(n => n.remove());
-    }
-}
-
-// Проверка возможности генерации с учетом русской системы
-function canGenerateProposalRussian() {
-    if (!currentUser) return false;
-    
-    const subscriptionType = currentUser.subscription || 'free';
-    const dailyLimits = {
-        'free': 3,
-        'premium': 50,
-        'pro': 200,
-        'enterprise': -1 // Unlimited
-    };
-    
-    const dailyLimit = dailyLimits[subscriptionType] || 3;
-    const remaining = currentUser.dailyRemaining || 0;
-    
-    if (dailyLimit === -1) return true; // Unlimited
-    return remaining > 0;
 } 
