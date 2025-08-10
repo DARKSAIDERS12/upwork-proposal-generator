@@ -214,6 +214,9 @@
 
     <script>
         let currentUser = null;
+        
+        // API URL для ЮKassa
+        const API_BASE_URL = 'http://localhost:5000/api';
 
         // Инициализация страницы
         document.addEventListener('DOMContentLoaded', function() {
@@ -235,23 +238,46 @@
         }
 
         // Загрузка данных о подписке
-        function loadSubscriptionData() {
+        async function loadSubscriptionData() {
             if (!currentUser) return;
 
-            // Загружаем текущую подписку
-            loadCurrentSubscription();
-            
-            // Загружаем историю платежей
-            loadPaymentHistory();
-            
-            // Загружаем действия с подпиской
-            loadSubscriptionActions();
+            try {
+                // Загружаем текущую подписку из API
+                await loadCurrentSubscription();
+                
+                // Загружаем историю платежей из API
+                await loadPaymentHistory();
+                
+                // Загружаем действия с подпиской
+                loadSubscriptionActions();
+            } catch (error) {
+                console.error('Ошибка загрузки данных:', error);
+                // Fallback к локальным данным
+                loadCurrentSubscription();
+                loadPaymentHistory();
+                loadSubscriptionActions();
+            }
         }
 
         // Загрузка текущей подписки
-        function loadCurrentSubscription() {
+        async function loadCurrentSubscription() {
             const container = document.getElementById('currentSubscription');
             
+            try {
+                // Пытаемся получить данные из API
+                const response = await fetch(`${API_BASE_URL}/subscription/status/${currentUser.id || 1}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.subscription && data.subscription.status !== 'free') {
+                        displaySubscriptionFromAPI(data.subscription);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки подписки из API:', error);
+            }
+            
+            // Fallback к локальным данным
             if (currentUser.subscription && currentUser.subscription !== 'free') {
                 const subscriptionInfo = getSubscriptionInfo(currentUser.subscription);
                 const isExpired = currentUser.subscriptionExpires && new Date(currentUser.subscriptionExpires) < new Date();
@@ -324,10 +350,22 @@
         }
 
         // Загрузка истории платежей
-        function loadPaymentHistory() {
+        async function loadPaymentHistory() {
             const container = document.getElementById('paymentHistory');
             
-            // Имитация истории платежей
+            try {
+                // Пытаемся получить данные из API
+                const response = await fetch(`${API_BASE_URL}/payment/history/${currentUser.id || 1}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayPaymentHistoryFromAPI(data.payments);
+                    return;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки истории платежей из API:', error);
+            }
+            
+            // Fallback к локальным данным
             const payments = [
                 {
                     id: 'yookassa_001',
@@ -370,6 +408,58 @@
                                                 </span>
                                             </td>
                                             <td class="py-3 px-4 text-sm text-gray-500">${payment.id}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">История платежей</h2>
+                        <p class="text-gray-600">У вас пока нет платежей</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Отображение истории платежей из API
+        function displayPaymentHistoryFromAPI(payments) {
+            const container = document.getElementById('paymentHistory');
+            
+            if (payments && payments.length > 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-lg p-8">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6">История платежей</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b">
+                                        <th class="text-left py-3 px-4">Дата</th>
+                                        <th class="text-left py-3 px-4">План</th>
+                                        <th class="text-left py-3 px-4">Сумма</th>
+                                        <th class="text-left py-3 px-4">Статус</th>
+                                        <th class="text-left py-3 px-4">ID платежа</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${payments.map(payment => `
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">${new Date(payment.created_at).toLocaleDateString('ru-RU')}</td>
+                                            <td class="py-3 px-4">
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                                                    ${payment.plan_type.toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 font-semibold">${payment.amount.toLocaleString()} ${payment.currency}</td>
+                                            <td class="py-3 px-4">
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                                                    ${payment.status === 'succeeded' ? 'Успешно' : payment.status}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-sm text-gray-500">${payment.payment_id}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>

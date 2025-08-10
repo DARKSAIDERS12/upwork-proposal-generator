@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата подписки - Upwork Proposal Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold">🚀 Upwork Proposal Generator</h1>
+                    <span class="text-blue-200">|</span>
+                    <span class="text-lg">Оплата подписки</span>
+                </div>
+                <nav class="flex items-center space-x-6">
+                    <a href="index.html" class="hover:text-blue-200 transition-colors">🏠 Главная</a>
+                    <a href="subscription_manager.html" class="hover:text-blue-200 transition-colors">⚙️ Управление</a>
+                    <div id="userInfo" class="hidden">
+                        <span id="userEmail" class="text-blue-200"></span>
+                        <button onclick="logout()" class="ml-4 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">Выйти</button>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-8">
+        <!-- Заголовок -->
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">Выберите тарифный план</h2>
+            <p class="text-xl text-gray-600">Получите доступ к продвинутым AI-функциям для создания предложений</p>
+        </div>
+
+        <!-- Тарифные планы -->
+        <div class="grid md:grid-cols-3 gap-8 mb-12">
+            <!-- Premium -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 card-hover border-2 border-blue-200">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-2">Premium</h3>
+                    <div class="text-4xl font-bold text-gray-800">1,500 ₽</div>
+                    <div class="text-gray-600">в месяц</div>
+                </div>
+                <ul class="space-y-3 mb-8">
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        50 предложений в день
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Yandex GPT AI
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Расширенные шаблоны
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Приоритетная поддержка
+                    </li>
+                </ul>
+                <button onclick="selectPlan('premium', 1500)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Выбрать Premium
+                </button>
+            </div>
+
+            <!-- Pro -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 card-hover border-2 border-purple-200 transform scale-105">
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span class="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold">Популярный</span>
+                </div>
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-purple-600 mb-2">Pro</h3>
+                    <div class="text-4xl font-bold text-gray-800">2,500 ₽</div>
+                    <div class="text-gray-600">в месяц</div>
+                </div>
+                <ul class="space-y-3 mb-8">
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        200 предложений в день
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Yandex GPT AI
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Все шаблоны
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Экспорт предложений
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        VIP поддержка
+                    </li>
+                </ul>
+                <button onclick="selectPlan('pro', 2500)" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Выбрать Pro
+                </button>
+            </div>
+
+            <!-- Enterprise -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 card-hover border-2 border-green-200">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-green-600 mb-2">Enterprise</h3>
+                    <div class="text-4xl font-bold text-gray-800">5,000 ₽</div>
+                    <div class="text-gray-600">в месяц</div>
+                </div>
+                <ul class="space-y-3 mb-8">
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Безлимитные предложения
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Yandex GPT AI
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Все функции
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        API доступ
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Персональный менеджер
+                    </li>
+                </ul>
+                <button onclick="selectPlan('enterprise', 5000)" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Выбрать Enterprise
+                </button>
+            </div>
+        </div>
+
+        <!-- Информация о безопасности -->
+        <div class="bg-blue-50 rounded-2xl p-8 text-center">
+            <h3 class="text-2xl font-bold text-blue-800 mb-4">🔒 Безопасность платежей</h3>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div>
+                    <div class="text-4xl mb-2">🛡️</div>
+                    <h4 class="font-semibold text-blue-700 mb-2">SSL шифрование</h4>
+                    <p class="text-blue-600">Все данные защищены современным шифрованием</p>
+                </div>
+                <div>
+                    <div class="text-4xl mb-2">💳</div>
+                    <h4 class="font-semibold text-blue-700 mb-2">ЮKassa</h4>
+                    <p class="text-blue-600">Официальный партнер ЮMoney для безопасных платежей</p>
+                </div>
+                <div>
+                    <div class="text-4xl mb-2">📧</div>
+                    <h4 class="font-semibold text-blue-700 mb-2">Подтверждение</h4>
+                    <p class="text-blue-600">Чек об оплате придет на ваш email</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно оплаты -->
+    <div id="paymentModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-800">Оплата подписки</h3>
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+            </div>
+            
+            <form id="paymentForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Email для чека</label>
+                    <input type="email" id="paymentEmail" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                </div>
+                
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Выбранный план:</span>
+                        <span id="selectedPlanName" class="font-semibold"></span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="text-gray-600">Стоимость:</span>
+                        <span id="selectedPlanPrice" class="font-semibold text-lg"></span>
+                    </div>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+                    Перейти к оплате
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="loading" class="loading hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl p-8 text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-700">Создаем платеж...</p>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let selectedPlan = null;
+        let selectedPrice = null;
+        
+        // API URL для ЮKassa
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Инициализация страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthStatus();
+        });
+
+        // Проверка статуса аутентификации
+        function checkAuthStatus() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                currentUser = user;
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('paymentEmail').value = user.email;
+            } else {
+                // Перенаправляем на главную страницу если не авторизован
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Выбор плана
+        function selectPlan(plan, price) {
+            selectedPlan = plan;
+            selectedPrice = price;
+            
+            // Обновляем информацию в модальном окне
+            document.getElementById('selectedPlanName').textContent = plan.toUpperCase();
+            document.getElementById('selectedPlanPrice').textContent = price + ' ₽';
+            
+            // Показываем модальное окно
+            document.getElementById('paymentModal').classList.remove('hidden');
+        }
+
+        // Закрытие модального окна
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+        }
+
+        // Обработка формы оплаты
+        document.getElementById('paymentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            processPayment();
+        });
+
+        // Обработка платежа
+        async function processPayment() {
+            try {
+                showLoading(true);
+                
+                // Получаем email пользователя
+                const email = document.getElementById('paymentEmail').value;
+                
+                // Создаем платеж через ЮKassa API
+                const response = await fetch(`${API_BASE_URL}/payment/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: currentUser.id || 1,
+                        plan_type: selectedPlan,
+                        email: email,
+                        return_url: window.location.origin + '/payment_success.html'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Ошибка создания платежа');
+                }
+                
+                const paymentData = await response.json();
+                
+                if (paymentData.confirmation_url) {
+                    // Перенаправляем на страницу оплаты ЮKassa
+                    window.location.href = paymentData.confirmation_url;
+                } else {
+                    throw new Error('Не получен URL для оплаты');
+                }
+                
+            } catch (error) {
+                alert('Ошибка создания платежа: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Показать/скрыть загрузку
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+
+        // Выход из системы
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+
+        // Закрытие модального окна по клику вне его
+        document.getElementById('paymentModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePaymentModal();
+            }
+        });
+    </script>
+</body>
+</html> 
