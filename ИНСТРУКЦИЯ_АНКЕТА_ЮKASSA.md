@@ -59,10 +59,10 @@
 6. **Способ получения услуги:** https://darksaiders12.github.io/delivery-info.html
 
 ### Контактная информация:
-- **Email поддержки:** support@upworkproposalgenerator.com
-- **Email для бизнес-вопросов:** business@upworkproposalgenerator.com
-- **Email для конфиденциальности:** privacy@upworkproposalgenerator.com
-- **Email для возвратов:** refunds@upworkproposalgenerator.com
+- **Email поддержки:** s.proposalgenerator@mail.ru
+- **Email для бизнес-вопросов:** businessupworkproposalgenerator@mail.ru
+- **Email для конфиденциальности:** privatupworkproposalgenerator@mail.ru
+- **Email для возвратов:** refundsupworkproposalgenerator@mail.ru
 
 ## 📊 Ключевые моменты для одобрения
 

@@ -89,11 +89,11 @@
 ## 📞 Контактная информация
 
 ### **Поддержка:**
-- **Техническая поддержка:** tech@upworkproposalgenerator.com
-- **Бизнес-вопросы:** business@upworkproposalgenerator.com
-- **Общие вопросы:** support@upworkproposalgenerator.com
-- **Конфиденциальность:** privacy@upworkproposalgenerator.com
-- **Возвраты:** refunds@upworkproposalgenerator.com
+- **Техническая поддержка:** techupworkproposalgenerator@mail.ru
+- **Бизнес-вопросы:** businessupworkproposalgenerator@mail.ru
+- **Общие вопросы:** s.proposalgenerator@mail.ru
+- **Конфиденциальность:** privatupworkproposalgenerator@mail.ru
+- **Возвраты:** refundsupworkproposalgenerator@mail.ru
 
 ## 🎉 Заключение
 
