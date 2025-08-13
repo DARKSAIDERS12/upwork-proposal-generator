@@ -9,10 +9,52 @@ import secrets
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
-CORS(app, supports_credentials=True)
+
+# Улучшенные CORS настройки для работы с разных устройств
+CORS(app, 
+     supports_credentials=True,
+     origins=['*'],  # Разрешаем все источники
+     methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+     allow_headers=['Content-Type', 'Authorization', 'X-Requested-With'])
 
 # Путь к базе данных
 DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
+
+# Добавляем маршрут для корня
+@app.route('/')
+def root():
+    """Корневой маршрут для проверки доступности сервера"""
+    return jsonify({
+        'status': 'running',
+        'service': 'Upwork Proposal Generator Auth Server',
+        'version': '1.0.0',
+        'timestamp': datetime.now().isoformat()
+    }), 200
+
+# Добавляем маршрут для health check
+@app.route('/api/health')
+def health_check():
+    """Проверка состояния сервера"""
+    try:
+        # Проверяем подключение к базе данных
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM users')
+        user_count = cursor.fetchone()[0]
+        conn.close()
+        
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'user_count': user_count,
+            'timestamp': datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
 
 def init_db():
     """Инициализация базы данных"""
@@ -220,6 +262,79 @@ def get_user():
         return jsonify({'error': 'Пользователь не найден'}), 404
     
     return jsonify({'user': user}), 200
+
+@app.route('/api/user-info/<email>', methods=['GET'])
+def get_user_info_by_email(email):
+    """Получение информации о пользователе по email (для отладки)"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, email, subscription, daily_proposals, daily_remaining, 
+                   last_reset_date, created_at, last_login 
+            FROM users WHERE email = ?
+        ''', (email,))
+        
+        user = cursor.fetchone()
+        conn.close()
+        
+        if user:
+            return jsonify({
+                'success': True,
+                'user': {
+                    'id': user[0],
+                    'email': user[1],
+                    'subscription': user[2],
+                    'daily_proposals': user[3],
+                    'daily_remaining': user[4],
+                    'last_reset_date': user[5],
+                    'created_at': user[6],
+                    'last_login': user[7]
+                }
+            }), 200
+        else:
+            return jsonify({'error': 'Пользователь не найден'}), 404
+            
+    except Exception as e:
+        return jsonify({'error': f'Ошибка получения информации: {str(e)}'}), 500
+
+@app.route('/api/debug/sessions', methods=['GET'])
+def debug_sessions():
+    """Отладочная информация о сессиях (только для разработки)"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT s.id, s.user_id, s.session_token, s.created_at, s.expires_at,
+                   u.email
+            FROM sessions s
+            JOIN users u ON s.user_id = u.id
+        ''')
+        
+        sessions = cursor.fetchall()
+        conn.close()
+        
+        session_list = []
+        for session in sessions:
+            session_list.append({
+                'id': session[0],
+                'user_id': session[1],
+                'session_token': session[2][:16] + '...',  # Показываем только начало токена
+                'created_at': session[3],
+                'expires_at': session[4],
+                'user_email': session[5]
+            })
+        
+        return jsonify({
+            'success': True,
+            'sessions': session_list,
+            'total_sessions': len(session_list)
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Ошибка получения сессий: {str(e)}'}), 500
 
 @app.route('/api/logout', methods=['POST'])
 def logout():

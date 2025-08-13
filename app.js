@@ -3,7 +3,7 @@ let currentUser = null;
 let stripe = null;
 let sessionToken = localStorage.getItem('sessionToken');
 
-// API конфигурация
+// API конфигурация - используем публичный Render сервер
 const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
 
 // Инициализация Stripe
