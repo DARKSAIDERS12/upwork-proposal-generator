@@ -4,7 +4,7 @@ let stripe = null;
 let sessionToken = localStorage.getItem('sessionToken');
 
 // API конфигурация
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
 
 // Инициализация Stripe
 function initStripe() {
