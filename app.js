@@ -1,6 +1,10 @@
 // Глобальные переменные
 let currentUser = null;
 let stripe = null;
+let sessionToken = localStorage.getItem('sessionToken');
+
+// API конфигурация
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Инициализация Stripe
 function initStripe() {
@@ -28,40 +32,59 @@ function initializeSubscriptionSystem() {
 }
 
 // Проверка и сброс ежедневных лимитов
-function checkAndResetDailyLimits() {
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    const today = new Date().toDateString();
+async function checkAndResetDailyLimits() {
+    if (!currentUser || !sessionToken) return;
     
-    users.forEach(user => {
-        if (user.lastResetDate !== today) {
-            user.dailyRemaining = user.subscription === 'free' ? 3 : 999;
-            user.lastResetDate = today;
-        }
-    });
-    
-    localStorage.setItem('users', JSON.stringify(users));
-    
-    // Обновляем текущего пользователя если он залогинен
-    if (currentUser) {
-        const updatedUser = users.find(u => u.email === currentUser.email);
-        if (updatedUser) {
-            currentUser = updatedUser;
-            localStorage.setItem('user', JSON.stringify(currentUser));
+    try {
+        const response = await fetch(`${API_BASE_URL}/reset-daily-limits`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            currentUser.daily_remaining = data.daily_remaining;
             updateSubscriptionStatus();
         }
+    } catch (error) {
+        console.error('Ошибка сброса лимитов:', error);
     }
 }
 
 // Проверка статуса аутентификации
-function checkAuthStatus() {
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user) {
-        currentUser = user;
-        showMainApp();
-        updateSubscriptionStatus();
-    } else {
-        showAuthForms();
+async function checkAuthStatus() {
+    if (sessionToken) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${sessionToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                currentUser = data.user;
+                showMainApp();
+                updateSubscriptionStatus();
+                return;
+            } else {
+                // Токен недействителен, удаляем его
+                localStorage.removeItem('sessionToken');
+                sessionToken = null;
+            }
+        } catch (error) {
+            console.error('Ошибка проверки аутентификации:', error);
+            localStorage.removeItem('sessionToken');
+            sessionToken = null;
+        }
     }
+    
+    showAuthForms();
 }
 
 // Показать формы аутентификации
@@ -115,38 +138,30 @@ async function register(event) {
     }
     
     try {
-        // Получаем существующих пользователей
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
+        const response = await fetch(`${API_BASE_URL}/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
         
-        // Проверяем, не существует ли уже пользователь с таким email
-        if (users.find(u => u.email === email)) {
-            showNotification('Пользователь с таким email уже существует', 'error');
-            return;
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Сохраняем токен сессии
+            sessionToken = data.session_token;
+            localStorage.setItem('sessionToken', sessionToken);
+            
+            // Устанавливаем текущего пользователя
+            currentUser = data.user;
+            
+            showMainApp();
+            updateSubscriptionStatus();
+            showNotification('Регистрация успешна!', 'success');
+        } else {
+            showNotification(data.error || 'Ошибка регистрации', 'error');
         }
-        
-        // Создаем нового пользователя
-        const user = {
-            id: Date.now(),
-            email: email,
-            password: password, // В реальном приложении пароль должен быть захеширован
-            subscription: 'free',
-            dailyProposals: 3,
-            dailyRemaining: 3,
-            lastResetDate: new Date().toDateString(),
-            createdAt: new Date().toISOString()
-        };
-        
-        // Добавляем пользователя в список
-        users.push(user);
-        localStorage.setItem('users', JSON.stringify(users));
-        
-        // Устанавливаем текущего пользователя
-        currentUser = user;
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        showMainApp();
-        updateSubscriptionStatus();
-        showNotification('Регистрация успешна!', 'success');
         
     } catch (error) {
         showNotification('Ошибка регистрации: ' + error.message, 'error');
@@ -161,18 +176,29 @@ async function login(event) {
     const password = document.getElementById('loginPassword').value;
     
     try {
-        // Получаем пользователей
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const user = users.find(u => u.email === email && u.password === password);
+        const response = await fetch(`${API_BASE_URL}/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        });
         
-        if (user) {
-            currentUser = user;
-            localStorage.setItem('user', JSON.stringify(user));
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Сохраняем токен сессии
+            sessionToken = data.session_token;
+            localStorage.setItem('sessionToken', sessionToken);
+            
+            // Устанавливаем текущего пользователя
+            currentUser = data.user;
+            
             showMainApp();
             updateSubscriptionStatus();
             showNotification('Вход выполнен успешно!', 'success');
         } else {
-            showNotification('Неверный email или пароль', 'error');
+            showNotification(data.error || 'Неверный email или пароль', 'error');
         }
         
     } catch (error) {
@@ -181,9 +207,27 @@ async function login(event) {
 }
 
 // Выход пользователя
-function logout() {
+async function logout() {
+    try {
+        if (sessionToken) {
+            await fetch(`${API_BASE_URL}/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${sessionToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Ошибка при выходе:', error);
+    }
+    
+    // Очищаем локальные данные
     currentUser = null;
+    sessionToken = null;
+    localStorage.removeItem('sessionToken');
     localStorage.removeItem('user');
+    
     showAuthForms();
     showNotification('Выход выполнен', 'info');
 }
@@ -200,12 +244,12 @@ function updateSubscriptionStatus() {
     
     if (currentUser.subscription && currentUser.subscription !== 'free') {
         subscriptionType.textContent = subscriptionInfo.name;
-        dailyRemaining.textContent = currentUser.dailyRemaining === -1 ? 'Безлимитно' : `Осталось: ${currentUser.dailyRemaining} предложений`;
+        dailyRemaining.textContent = currentUser.daily_remaining === -1 ? 'Безлимитно' : `Осталось: ${currentUser.daily_remaining} предложений`;
         upgradeBtn.textContent = 'Управлять подпиской';
         upgradeBtn.onclick = manageSubscription;
     } else {
         subscriptionType.textContent = 'Бесплатная';
-        dailyRemaining.textContent = `Осталось: ${currentUser.dailyRemaining} предложений`;
+        dailyRemaining.textContent = `Осталось: ${currentUser.daily_remaining || 0} предложений`;
         upgradeBtn.textContent = 'Обновить до Premium';
         upgradeBtn.onclick = showUpgradeModal;
     }
