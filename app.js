@@ -3,8 +3,27 @@ let currentUser = null;
 let stripe = null;
 let sessionToken = localStorage.getItem('sessionToken');
 
-// API конфигурация - используем публичный Render сервер
-const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
+// API конфигурация - автоматическое переключение между серверами
+let API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
+
+// Функция для проверки доступности сервера и переключения на локальный при необходимости
+async function checkAndSetServer() {
+    try {
+        const response = await fetch('https://upwork-auth-server.onrender.com/api/health');
+        if (response.ok) {
+            API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
+            console.log('✅ Используется публичный сервер Render');
+            return true;
+        }
+    } catch (error) {
+        console.log('❌ Публичный сервер недоступен, переключаемся на локальный');
+    }
+    
+    // Если публичный сервер недоступен, используем локальный
+    API_BASE_URL = 'http://192.168.1.124:5000/api';
+    console.log('🔄 Используется локальный сервер');
+    return false;
+}
 
 // Инициализация Stripe
 function initStripe() {
@@ -15,7 +34,10 @@ function initStripe() {
 }
 
 // Инициализация приложения
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Проверяем и устанавливаем доступный сервер
+    await checkAndSetServer();
+    
     initStripe();
     checkAuthStatus();
     loadProposalsHistory();
