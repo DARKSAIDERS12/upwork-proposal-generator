@@ -6,6 +6,27 @@ let sessionToken = localStorage.getItem('sessionToken');
 // API конфигурация
 const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
 
+// Функция для fetch с тайм-аутом
+async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            throw new Error('Превышено время ожидания соединения с сервером');
+        }
+        throw error;
+    }
+}
+
 // Инициализация Stripe
 function initStripe() {
     const publishableKey = 'pk_test_your_stripe_publishable_key'; // Замените на ваш ключ
@@ -20,6 +41,19 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
     loadProposalsHistory();
     initializeSubscriptionSystem();
+    
+    // Проверяем онлайн статус
+    window.addEventListener('online', () => {
+        console.log('Соединение восстановлено');
+        if (sessionToken) {
+            checkAuthStatus();
+        }
+    });
+    
+    window.addEventListener('offline', () => {
+        console.log('Соединение потеряно');
+        showNotification('Соединение с интернетом потеряно. Некоторые функции могут быть недоступны.', 'warning');
+    });
 });
 
 // Инициализация системы подписок
@@ -80,7 +114,7 @@ async function checkAndResetDailyLimits() {
 async function checkAuthStatus() {
     if (sessionToken) {
         try {
-            const response = await fetch(`${API_BASE_URL}/user`, {
+            const response = await fetchWithTimeout(`${API_BASE_URL}/user`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${sessionToken}`,
@@ -94,14 +128,24 @@ async function checkAuthStatus() {
                 showMainApp();
                 updateSubscriptionStatus();
                 return;
-                    } else {
-            // Токен недействителен, удаляем его
-            localStorage.removeItem('sessionToken');
-            sessionToken = null;
-            showNotification('Сессия истекла. Пожалуйста, войдите снова.', 'warning');
-        }
+            } else {
+                // Токен недействителен, удаляем его
+                localStorage.removeItem('sessionToken');
+                sessionToken = null;
+                showNotification('Сессия истекла. Пожалуйста, войдите снова.', 'warning');
+            }
         } catch (error) {
             console.error('Ошибка проверки аутентификации:', error);
+            
+            // Если это сетевая ошибка, не удаляем токен сразу
+            if (error.message.includes('Failed to fetch') || error.message.includes('Load failed') || error.message.includes('NetworkError')) {
+                console.log('Сетевая ошибка при проверке аутентификации. Токен сохранен для повторной попытки.');
+                // Покажем формы входа, но не удаляем токен
+                showAuthForms();
+                return;
+            }
+            
+            // Для других ошибок удаляем токен
             localStorage.removeItem('sessionToken');
             sessionToken = null;
         }
@@ -161,7 +205,7 @@ async function register(event) {
     }
     
     try {
-        const response = await fetch(`${API_BASE_URL}/register`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -187,7 +231,12 @@ async function register(event) {
         }
         
     } catch (error) {
-        showNotification('Ошибка регистрации: ' + error.message, 'error');
+        console.error('Ошибка регистрации:', error);
+        if (error.message.includes('Failed to fetch') || error.message.includes('Load failed') || error.message.includes('NetworkError')) {
+            showNotification('Ошибка подключения к серверу. Проверьте интернет-соединение и попробуйте снова.', 'error', true);
+        } else {
+            showNotification('Ошибка регистрации: ' + error.message, 'error');
+        }
     }
 }
 
@@ -199,7 +248,7 @@ async function login(event) {
     const password = document.getElementById('loginPassword').value;
     
     try {
-        const response = await fetch(`${API_BASE_URL}/login`, {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -229,7 +278,12 @@ async function login(event) {
         }
         
     } catch (error) {
-        showNotification('Ошибка входа: ' + error.message, 'error');
+        console.error('Ошибка входа:', error);
+        if (error.message.includes('Failed to fetch') || error.message.includes('Load failed') || error.message.includes('NetworkError')) {
+            showNotification('Ошибка подключения к серверу. Проверьте интернет-соединение и попробуйте снова.', 'error', true);
+        } else {
+            showNotification('Ошибка входа: ' + error.message, 'error');
+        }
     }
 }
 
@@ -711,16 +765,41 @@ function showLoading(show) {
 }
 
 // Показать уведомление
-function showNotification(message, type = 'success') {
+function showNotification(message, type = 'success', showRetry = false) {
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    notification.textContent = message;
+    notification.innerHTML = message;
+    
+    // Добавляем кнопку повтора для сетевых ошибок
+    if (showRetry && message.includes('подключения к серверу')) {
+        const retryBtn = document.createElement('button');
+        retryBtn.textContent = '🔄 Повторить';
+        retryBtn.style.marginLeft = '10px';
+        retryBtn.style.background = 'rgba(255,255,255,0.2)';
+        retryBtn.style.border = '1px solid rgba(255,255,255,0.3)';
+        retryBtn.style.color = 'white';
+        retryBtn.style.padding = '5px 10px';
+        retryBtn.style.borderRadius = '3px';
+        retryBtn.style.cursor = 'pointer';
+        
+        retryBtn.onclick = () => {
+            notification.remove();
+            // Если есть сохраненный токен, попробуем проверить аутентификацию снова
+            if (sessionToken) {
+                checkAuthStatus();
+            }
+        };
+        
+        notification.appendChild(retryBtn);
+    }
     
     document.body.appendChild(notification);
     
     setTimeout(() => {
-        notification.remove();
-    }, 5000);
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, showRetry ? 10000 : 5000); // Увеличиваем время для ошибок с кнопкой повтора
 }
 
 // Закрытие модального окна при клике вне его
