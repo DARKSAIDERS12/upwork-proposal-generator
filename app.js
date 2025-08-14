@@ -1,4 +1,4 @@
-// Глобальные переменные - ОБНОВЛЕНО 14.08.2025 15:15
+// Глобальные переменные - ОБНОВЛЕНО 14.08.2025 22:30 - ЦЕНЫ В РУБЛЯХ
 let currentUser = null;
 let stripe = null;
 let sessionToken = localStorage.getItem('sessionToken');
@@ -375,7 +375,7 @@ function getSubscriptionInfo(subscriptionType) {
             name: 'Premium',
             aiProvider: 'Yandex GPT',
             dailyLimit: 50,
-            price: '1,500 ₽'
+            price: '699 ₽'
         },
         'pro': {
             name: 'Pro',

@@ -462,6 +462,47 @@ def cleanup_sessions():
     except Exception as e:
         return jsonify({'error': f'Ошибка очистки сессий: {str(e)}'}), 500
 
+@app.route('/api/update-limits', methods=['POST'])
+def update_user_limits():
+    """Обновление лимитов пользователя"""
+    session_token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    
+    if not session_token:
+        return jsonify({'error': 'Токен сессии не предоставлен'}), 401
+    
+    user_id = validate_session(session_token)
+    if not user_id:
+        return jsonify({'error': 'Недействительная сессия'}), 401
+    
+    try:
+        data = request.get_json()
+        daily_remaining = data.get('daily_remaining')
+        
+        if daily_remaining is None:
+            return jsonify({'error': 'Параметр daily_remaining обязателен'}), 400
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Обновляем лимиты пользователя
+        cursor.execute('''
+            UPDATE users 
+            SET daily_remaining = ? 
+            WHERE id = ?
+        ''', (daily_remaining, user_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Лимиты обновлены',
+            'daily_remaining': daily_remaining
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Ошибка обновления лимитов: {str(e)}'}), 500
+
 if __name__ == '__main__':
     init_db()
     print("База данных инициализирована")
