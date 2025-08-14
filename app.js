@@ -7,7 +7,7 @@ let sessionToken = localStorage.getItem('sessionToken');
 const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
 
 // Функция для fetch с тайм-аутом
-async function fetchWithTimeout(url, options = {}, timeout = 10000) {
+async function fetchWithTimeout(url, options = {}, timeout = 30000) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
     

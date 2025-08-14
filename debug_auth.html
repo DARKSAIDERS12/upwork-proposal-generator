@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Диагностика аутентификации</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { margin: 5px; padding: 10px 15px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .log { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Диагностика системы аутентификации</h1>
+    
+    <div id="results"></div>
+    
+    <button onclick="runFullDiagnostic()">🚀 Запустить полную диагностику</button>
+    <button onclick="testServerHealth()">🏥 Проверить сервер</button>
+    <button onclick="testUserCreation()">👤 Создать тестового пользователя</button>
+    <button onclick="testLogin()">🔐 Тестовый вход</button>
+    <button onclick="clearLogs()">🧹 Очистить логи</button>
+    
+    <div id="logs" class="log"></div>
+
+    <script>
+        const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
+        let testUser = {
+            email: 'test-debug-' + Date.now() + '@example.com',
+            password: 'testpass123'
+        };
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.getElementById('logs');
+            logDiv.textContent += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function showResult(message, type) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.textContent = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').textContent = '';
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testServerHealth() {
+            log('🏥 Проверка здоровья сервера...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Сервер работает. Пользователей в базе: ${data.user_count}`);
+                    showResult(`✅ Сервер здоров. База данных подключена. Пользователей: ${data.user_count}`, 'success');
+                    return true;
+                } else {
+                    log(`❌ Ошибка сервера: ${response.status}`);
+                    showResult(`❌ Сервер недоступен (статус: ${response.status})`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Сетевая ошибка: ${error.message}`);
+                showResult(`❌ Сетевая ошибка: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testUserCreation() {
+            log(`👤 Создание тестового пользователя: ${testUser.email}`);
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testUser)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Пользователь создан. Токен: ${data.session_token.substring(0, 16)}...`);
+                    showResult(`✅ Регистрация работает. Пользователь создан с токеном.`, 'success');
+                    testUser.token = data.session_token;
+                    return true;
+                } else {
+                    log(`❌ Ошибка регистрации: ${data.error}`);
+                    showResult(`❌ Регистрация не работает: ${data.error}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Ошибка при регистрации: ${error.message}`);
+                showResult(`❌ Ошибка регистрации: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testLogin() {
+            log(`🔐 Тестовый вход с: ${testUser.email}`);
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: testUser.email,
+                        password: testUser.password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Вход успешен. Пользователь: ${data.user.email}, Лимиты: ${data.user.daily_remaining}`);
+                    showResult(`✅ Вход работает. Получены данные пользователя и лимиты.`, 'success');
+                    
+                    // Проверим получение пользователя по токену
+                    await testGetUser(data.session_token);
+                    return true;
+                } else {
+                    log(`❌ Ошибка входа: ${data.error}`);
+                    showResult(`❌ Вход не работает: ${data.error}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`❌ Ошибка при входе: ${error.message}`);
+                showResult(`❌ Ошибка входа: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testGetUser(token) {
+            log(`📋 Проверка получения данных пользователя по токену...`);
+            try {
+                const response = await fetch(`${API_BASE_URL}/user`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Данные получены: ${JSON.stringify(data.user, null, 2)}`);
+                    showResult(`✅ Получение данных пользователя работает корректно.`, 'success');
+                } else {
+                    log(`❌ Ошибка получения данных: ${data.error}`);
+                    showResult(`❌ Получение данных не работает: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Ошибка при получении данных: ${error.message}`);
+                showResult(`❌ Ошибка получения данных: ${error.message}`, 'error');
+            }
+        }
+
+        async function testExistingUser() {
+            log(`🔍 Проверка входа с kirill2@mail.ru...`);
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'kirill2@mail.ru',
+                        password: '12345'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ kirill2@mail.ru существует и работает! Лимиты: ${data.user.daily_remaining}`);
+                    showResult(`✅ Пользователь kirill2@mail.ru работает корректно.`, 'success');
+                } else {
+                    log(`❌ Проблема с kirill2@mail.ru: ${data.error}`);
+                    showResult(`❌ kirill2@mail.ru не работает: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Ошибка при проверке kirill2@mail.ru: ${error.message}`);
+                showResult(`❌ Сетевая ошибка при проверке kirill2@mail.ru: ${error.message}`, 'error');
+            }
+        }
+
+        async function runFullDiagnostic() {
+            clearLogs();
+            log('🚀 Запуск полной диагностики системы...');
+            
+            // 1. Проверка сервера
+            const serverOk = await testServerHealth();
+            if (!serverOk) {
+                log('❌ Сервер недоступен. Диагностика остановлена.');
+                return;
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 2. Проверка существующего пользователя
+            await testExistingUser();
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 3. Создание нового пользователя
+            const userCreated = await testUserCreation();
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // 4. Тест входа
+            if (userCreated) {
+                await testLogin();
+            }
+            
+            log('🏁 Диагностика завершена!');
+            showResult('🏁 Полная диагностика завершена. Проверьте результаты выше.', 'info');
+        }
+
+        // Автоматический запуск при загрузке
+        window.addEventListener('load', () => {
+            log('📱 Страница диагностики загружена');
+            log('🔧 Готов к диагностике системы аутентификации');
+        });
+    </script>
+</body>
+</html>
