@@ -1,4 +1,4 @@
-// Глобальные переменные
+// Глобальные переменные - ОБНОВЛЕНО 14.08.2025 15:15
 let currentUser = null;
 let stripe = null;
 let sessionToken = localStorage.getItem('sessionToken');
@@ -84,6 +84,32 @@ async function cleanupOldSessions() {
         }
     } catch (error) {
         console.error('Ошибка очистки сессий:', error);
+    }
+}
+
+// Обновление лимитов пользователя на сервере
+async function updateUserLimitsOnServer() {
+    if (!sessionToken || !currentUser) return;
+    
+    try {
+        const response = await fetchWithTimeout(`${API_BASE_URL}/update-limits`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sessionToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                daily_remaining: currentUser.daily_remaining
+            })
+        });
+        
+        if (response.ok) {
+            console.log('Лимиты обновлены на сервере');
+        } else {
+            console.error('Ошибка обновления лимитов на сервере');
+        }
+    } catch (error) {
+        console.error('Ошибка при обновлении лимитов:', error);
     }
 }
 
@@ -378,7 +404,7 @@ async function generateProposal(event) {
     }
     
     // Проверяем лимиты для бесплатной версии
-    if (currentUser.subscription === 'free' && currentUser.dailyRemaining <= 0) {
+    if (currentUser.subscription === 'free' && currentUser.daily_remaining <= 0) {
         showNotification('Достигнут дневной лимит. Обновитесь до Premium для неограниченного доступа.', 'error');
         showUpgradeModal();
         return;
@@ -403,16 +429,12 @@ async function generateProposal(event) {
             
             // Уменьшаем счетчик для бесплатной версии
             if (currentUser.subscription === 'free') {
-                currentUser.dailyRemaining--;
+                currentUser.daily_remaining--;
                 
-                // Обновляем пользователя в списке
-                const users = JSON.parse(localStorage.getItem('users') || '[]');
-                const userIndex = users.findIndex(u => u.email === currentUser.email);
-                if (userIndex !== -1) {
-                    users[userIndex] = currentUser;
-                    localStorage.setItem('users', JSON.stringify(users));
-                }
+                // Обновляем пользователя на сервере
+                updateUserLimitsOnServer();
                 
+                // Обновляем локальные данные
                 localStorage.setItem('user', JSON.stringify(currentUser));
                 updateSubscriptionStatus();
             }
@@ -672,6 +694,18 @@ function manageSubscription() {
     } else {
         showNotification('У вас нет активной подписки', 'info');
     }
+}
+
+// Открыть страницу управления подписками
+function openSubscriptionManager() {
+    // Проверяем, авторизован ли пользователь
+    if (!currentUser) {
+        showNotification('Сначала войдите в систему', 'error');
+        return;
+    }
+    
+    // Открываем страницу subscription_manager.html
+    window.location.href = 'subscription_manager.html';
 }
 
 // Показать модальное окно с информацией о подписке
