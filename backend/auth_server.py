@@ -118,12 +118,16 @@ def validate_session(session_token):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
+    # Сначала очищаем истекшие сессии
+    cursor.execute('DELETE FROM sessions WHERE expires_at <= ?', (datetime.now().isoformat(),))
+    
     cursor.execute('''
         SELECT user_id, expires_at FROM sessions 
         WHERE session_token = ? AND expires_at > ?
     ''', (session_token, datetime.now().isoformat()))
     
     result = cursor.fetchone()
+    conn.commit()  # Сохраняем изменения после очистки
     conn.close()
     
     if result:
@@ -186,7 +190,7 @@ def register():
         conn.commit()
         conn.close()
         
-        # Создаем сессию
+        # Создаем сессию (для нового пользователя старых сессий нет)
         session_token = create_session(user_id)
         
         return jsonify({
@@ -225,6 +229,9 @@ def login():
             return jsonify({'error': 'Неверный email или пароль'}), 401
         
         user_id = user[0]
+        
+        # Очищаем старые сессии пользователя
+        cursor.execute('DELETE FROM sessions WHERE user_id = ?', (user_id,))
         
         # Обновляем время последнего входа
         cursor.execute('UPDATE users SET last_login = ? WHERE id = ?', 
@@ -431,6 +438,29 @@ def update_subscription():
         'subscription': subscription,
         'daily_remaining': daily_remaining
     }), 200
+
+@app.route('/api/cleanup-sessions', methods=['POST'])
+def cleanup_sessions():
+    """Очистка истекших сессий"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Удаляем истекшие сессии
+        cursor.execute('DELETE FROM sessions WHERE expires_at <= ?', (datetime.now().isoformat(),))
+        deleted_count = cursor.rowcount
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Удалено {deleted_count} истекших сессий',
+            'deleted_count': deleted_count
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': f'Ошибка очистки сессий: {str(e)}'}), 500
 
 if __name__ == '__main__':
     init_db()

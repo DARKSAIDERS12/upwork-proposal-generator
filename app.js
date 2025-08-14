@@ -4,7 +4,7 @@ let stripe = null;
 let sessionToken = localStorage.getItem('sessionToken');
 
 // API конфигурация
-const API_BASE_URL = 'http://192.168.1.124:5000/api';
+const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
 
 // Инициализация Stripe
 function initStripe() {
@@ -29,6 +29,28 @@ function initializeSubscriptionSystem() {
     
     // Устанавливаем интервал для ежедневного сброса (каждые 24 часа)
     setInterval(checkAndResetDailyLimits, 24 * 60 * 60 * 1000);
+    
+    // Очищаем старые сессии каждые 12 часов
+    setInterval(cleanupOldSessions, 12 * 60 * 60 * 1000);
+}
+
+// Очистка старых сессий
+async function cleanupOldSessions() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/cleanup-sessions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Очистка сессий:', data.message);
+        }
+    } catch (error) {
+        console.error('Ошибка очистки сессий:', error);
+    }
 }
 
 // Проверка и сброс ежедневных лимитов
@@ -72,11 +94,12 @@ async function checkAuthStatus() {
                 showMainApp();
                 updateSubscriptionStatus();
                 return;
-            } else {
-                // Токен недействителен, удаляем его
-                localStorage.removeItem('sessionToken');
-                sessionToken = null;
-            }
+                    } else {
+            // Токен недействителен, удаляем его
+            localStorage.removeItem('sessionToken');
+            sessionToken = null;
+            showNotification('Сессия истекла. Пожалуйста, войдите снова.', 'warning');
+        }
         } catch (error) {
             console.error('Ошибка проверки аутентификации:', error);
             localStorage.removeItem('sessionToken');
@@ -198,7 +221,11 @@ async function login(event) {
             updateSubscriptionStatus();
             showNotification('Вход выполнен успешно!', 'success');
         } else {
-            showNotification(data.error || 'Неверный email или пароль', 'error');
+            if (data.error === 'Неверный email или пароль') {
+                showNotification('Неверный email или пароль. Проверьте правильность введенных данных.', 'error');
+            } else {
+                showNotification(data.error || 'Ошибка входа. Попробуйте еще раз.', 'error');
+            }
         }
         
     } catch (error) {
