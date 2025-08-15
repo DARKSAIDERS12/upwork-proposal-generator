@@ -28,3 +28,4 @@ git checkout main
 echo "✅ ЦЕНЫ ОБНОВЛЕНЫ НА РУБЛИ!"
 echo "🌍 Проверьте через 2-3 минуты: https://darksaiders12.github.io/upwork-proposal-generator/"
 echo "💰 Теперь Premium стоит 699 ₽/мес вместо $9.99/мес"
+
