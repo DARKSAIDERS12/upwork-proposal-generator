@@ -322,47 +322,59 @@
     <!-- Scripts -->
     <!-- Загружаем Supabase SDK с проверкой и fallback -->
     <script>
-        // Функция для загрузки Supabase SDK с fallback
+        // Функция для загрузки Supabase SDK с расширенным fallback
         function loadSupabaseSDK() {
             return new Promise((resolve, reject) => {
-                console.log('🔄 Начинаем загрузку Supabase SDK...');
+                console.log("🔄 Начинаем загрузку Supabase SDK...");
                 
-                // Пробуем основной CDN
-                const script = document.createElement('script');
-                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                // Список CDN для попыток загрузки
+                const cdnUrls = [
+                    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
+                    "https://unpkg.com/@supabase/supabase-js@2",
+                    "https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.38.4/umd/supabase.min.js",
+                    "https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2"
+                ];
                 
-                script.onload = () => {
-                    console.log('✅ Supabase SDK загружен с основного CDN');
-                    resolve();
-                };
+                let currentIndex = 0;
                 
-                script.onerror = () => {
-                    console.log('⚠️ Основной CDN недоступен, пробуем альтернативный...');
+                function tryNextCDN() {
+                    if (currentIndex >= cdnUrls.length) {
+                        console.error("❌ Все CDN недоступны");
+                        reject(new Error("Не удалось загрузить Supabase SDK ни с одного CDN"));
+                        return;
+                    }
                     
-                    // Fallback на альтернативный CDN
-                    const fallbackScript = document.createElement('script');
-                    fallbackScript.src = 'https://unpkg.com/@supabase/supabase-js@2';
+                    const script = document.createElement("script");
+                    script.src = cdnUrls[currentIndex];
+                    console.log(`🔄 Пробуем CDN ${currentIndex + 1}: ${cdnUrls[currentIndex]}`);
                     
-                    fallbackScript.onload = () => {
-                        console.log('✅ Supabase SDK загружен с альтернативного CDN');
+                    script.onload = () => {
+                        console.log(`✅ Supabase SDK загружен с CDN ${currentIndex + 1}`);
                         resolve();
                     };
                     
-                    fallbackScript.onerror = () => {
-                        console.log('❌ Оба CDN недоступны');
-                        reject(new Error('Не удалось загрузить Supabase SDK'));
+                    script.onerror = () => {
+                        console.warn(`⚠️ CDN ${currentIndex + 1} недоступен, пробуем следующий...`);
+                        currentIndex++;
+                        tryNextCDN();
                     };
                     
-                    document.head.appendChild(fallbackScript);
-                };
+                    // Таймаут для каждого CDN
+                    setTimeout(() => {
+                        if (script.parentNode) {
+                            script.parentNode.removeChild(script);
+                            console.warn(`⏰ Таймаут для CDN ${currentIndex + 1}`);
+                            currentIndex++;
+                            tryNextCDN();
+                        }
+                    }, 10000);
+                    
+                    document.head.appendChild(script);
+                }
                 
-                document.head.appendChild(script);
+                tryNextCDN();
             });
         }
-        
-        // Проверяем загрузку Supabase SDK
-        window.addEventListener('load', function() {
-            console.log('🚀 Страница загружена, начинаем инициализацию...');
             
             loadSupabaseSDK()
                 .then(() => {
@@ -753,29 +765,35 @@
                     console.log('✅ mainApp скрыт');
                 }
                 
-                if (userInfo) {
-                    userInfo.style.display = 'none';
-                    console.log('✅ userInfo скрыт');
-                }
-                
-                console.log('🎉 hideMainContent() завершена успешно');
-                
-            } catch (error) {
-                console.error(`❌ Ошибка в hideMainContent(): ${error.message}`);
-            }
-        }
-        
-        // Ждем загрузки Supabase SDK
+        // Ждем загрузки Supabase SDK с улучшенной обработкой ошибок
         function waitForSupabase() {
             return new Promise((resolve) => {
-                if (typeof window.supabase !== 'undefined') {
+                if (typeof window.supabase !== "undefined") {
+                    console.log("✅ Supabase SDK уже загружен");
                     resolve();
-                } else {
-                    const checkInterval = setInterval(() => {
-                        if (typeof window.supabase !== 'undefined') {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }
+                    return;
+                }
+                
+                console.log("⏳ Ожидаем загрузки Supabase SDK...");
+                let attempts = 0;
+                const maxAttempts = 300; // 15 секунд при проверке каждые 50мс
+                
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    
+                    if (typeof window.supabase !== "undefined") {
+                        clearInterval(checkInterval);
+                        console.log(`✅ Supabase SDK загружен после ${attempts} попыток`);
+                        resolve();
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        console.warn("⚠️ Таймаут ожидания Supabase SDK (15 сек), продолжаем...");
+                        resolve();
+                    }
+                }, 50);
+            });
+        }
                     }, 50);
                     
                     // Таймаут на случай, если SDK не загрузится
@@ -826,29 +844,38 @@
         // Загружаем скрипты после Supabase SDK
         async function loadRemainingScripts() {
             try {
-                console.log('⏳ Ждем загрузки Supabase SDK...');
+                console.log("⏳ Ждем загрузки Supabase SDK...");
                 await waitForSupabase();
-                console.log('✅ Supabase SDK готов, загружаем остальные скрипты...');
+                
+                // Проверяем, действительно ли Supabase SDK загрузился
+                if (typeof window.supabase === "undefined") {
+                    console.warn("⚠️ Supabase SDK не загрузился, но продолжаем...");
+                    showNotification("⚠️ Проблема с загрузкой Supabase SDK. Некоторые функции могут не работать.", "warning");
+                } else {
+                    console.log("✅ Supabase SDK готов, загружаем остальные скрипты...");
+                }
                 
                 // Загружаем auth.js
-                const authScript = document.createElement('script');
-                authScript.src = 'auth.js';
+                const authScript = document.createElement("script");
+                authScript.src = "auth.js";
                 document.body.appendChild(authScript);
                 
                 // Ждем загрузки auth.js
                 await new Promise((resolve) => {
                     authScript.onload = resolve;
+                    // Таймаут для auth.js
+                    setTimeout(resolve, 10000);
                 });
-                console.log('✅ auth.js загружен');
+                console.log("✅ auth.js загружен");
                 
                 // Ждем полной инициализации auth.js
                 await new Promise((resolve) => {
                     const checkAuth = setInterval(() => {
-                        if (typeof onAuthStateChange !== 'undefined' && 
-                            typeof initSupabase !== 'undefined' && 
-                            typeof registerUser !== 'undefined' && 
-                            typeof loginUser !== 'undefined' && 
-                            typeof logoutUser !== 'undefined') {
+                        if (typeof onAuthStateChange !== "undefined" && 
+                            typeof initSupabase !== "undefined" && 
+                            typeof registerUser !== "undefined" && 
+                            typeof loginUser !== "undefined" && 
+                            typeof logoutUser !== "undefined") {
                             clearInterval(checkAuth);
                             resolve();
                         }
