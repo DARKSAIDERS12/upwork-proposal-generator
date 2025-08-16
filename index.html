@@ -747,27 +747,31 @@
             console.log('🔄 hideMainContent() вызвана');
             
             // Очищаем localStorage при выходе
-            localStorage.removeItem('user');
-            console.log('🗑️ Пользователь удален из localStorage');
-            
             try {
-                const authForms = document.getElementById('authForms');
-                const mainApp = document.getElementById('mainApp');
-                const userInfo = document.getElementById('userInfo');
+                const authForms = document.getElementById("authForms");
+                const mainApp = document.getElementById("mainApp");
+                const userInfo = document.getElementById("userInfo");
                 
                 if (authForms) {
-                    authForms.style.display = 'block';
-                    console.log('✅ authForms показан');
+                    authForms.style.display = "block";
+                    console.log("✅ authForms показан");
                 }
                 
                 if (mainApp) {
-                    mainApp.style.display = 'none';
-                    console.log('✅ mainApp скрыт');
+                    mainApp.style.display = "none";
+                    console.log("✅ mainApp скрыт");
                 }
                 
-        // Ждем загрузки Supabase SDK с улучшенной обработкой ошибок
-        function waitForSupabase() {
-            return new Promise((resolve) => {
+                if (userInfo) {
+                    userInfo.style.display = "none";
+                    console.log("✅ userInfo скрыт");
+                }
+                
+                console.log("🎉 hideMainContent() завершена успешно");
+                
+            } catch (error) {
+                console.error(`❌ Ошибка в hideMainContent(): ${error.message}`);
+            }
                 if (typeof window.supabase !== "undefined") {
                     console.log("✅ Supabase SDK уже загружен");
                     resolve();
@@ -792,17 +796,6 @@
                         resolve();
                     }
                 }, 50);
-            });
-        }
-                    }, 50);
-                    
-                    // Таймаут на случай, если SDK не загрузится
-                    setTimeout(() => {
-                        clearInterval(checkInterval);
-                        console.warn('⚠️ Таймаут ожидания Supabase SDK, продолжаем...');
-                        resolve();
-                    }, 15000);
-                }
             });
         }
 
