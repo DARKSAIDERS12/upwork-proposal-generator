@@ -430,6 +430,10 @@
                     targetBtn.classList.add('active');
                 }
             } catch (error) {
+        }
+        
+        // Функция ожидания загрузки Supabase SDK
+        function waitForSupabase() {
                 console.error('Ошибка в showTab:', error);
             }
         }
@@ -471,6 +475,10 @@
                 showMainContent();
                 
             } catch (error) {
+        }
+        
+        // Функция ожидания загрузки Supabase SDK
+        function waitForSupabase() {
                 console.error('❌ Ошибка входа:', error);
                 showNotification(`❌ Ошибка входа: ${error.message}`, 'error');
             }
@@ -500,12 +508,17 @@
                 showNotification('✅ Вы вышли из системы', 'success');
                 
             } catch (error) {
+        }
+        
+        // Функция ожидания загрузки Supabase SDK
+        function waitForSupabase() {
                 console.error('❌ Ошибка выхода:', error);
                 showNotification(`❌ Ошибка выхода: ${error.message}`, 'error');
             }
         };
         
-        // Функция входа через GitHub - определяем сразу
+        // Функция регистрации - определяем сразу
+        window.handleRegister = async function(event) {
             console.log('🔄 Попытка регистрации...');
             
             try {
@@ -606,6 +619,10 @@
                 showMainContent();
                 
             } catch (error) {
+        }
+        
+        // Функция ожидания загрузки Supabase SDK
+        function waitForSupabase() {
                 console.error('❌ Ошибка GitHub входа:', error);
                 showNotification(`❌ Ошибка входа через GitHub: ${error.message}`, 'error');
             }
@@ -666,6 +683,10 @@
                 console.log('🎉 showMainContent() завершена успешно');
                 
             } catch (error) {
+        }
+        
+        // Функция ожидания загрузки Supabase SDK
+        function waitForSupabase() {
                 console.error(`❌ Ошибка в showMainContent(): ${error.message}`);
             }
         }
@@ -696,13 +717,45 @@
                 
                 console.log("🎉 hideMainContent() завершена успешно");
                 
-            } catch (error) {
-                console.error(`❌ Ошибка в hideMainContent(): ${error.message}`);
-            }
+
+        // Функция ожидания загрузки Supabase SDK
+        function waitForSupabase() {
+            return new Promise((resolve) => {
                 if (typeof window.supabase !== "undefined") {
                     console.log("✅ Supabase SDK уже загружен");
                     resolve();
                     return;
+                }
+                
+                console.log("⏳ Ожидаем загрузки Supabase SDK...");
+                let attempts = 0;
+                const maxAttempts = 300; // 15 секунд при проверке каждые 50мс
+                
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    
+                    if (typeof window.supabase !== "undefined") {
+                        clearInterval(checkInterval);
+                        console.log(`✅ Supabase SDK загружен после ${attempts} попыток`);
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        console.warn("⚠️ Таймаут ожидания Supabase SDK (15 сек), продолжаем...");
+                        resolve();
+                    }
+                }, 50);
+            });
+        }
+
+
+
+
+
+
+
+
+
+
                 }
                 
                 console.log("⏳ Ожидаем загрузки Supabase SDK...");
@@ -754,6 +807,10 @@
                 }
                 
             } catch (error) {
+        }
+        
+        // Функция ожидания загрузки Supabase SDK
+        function waitForSupabase() {
                 console.error('❌ Ошибка проверки состояния аутентификации:', error);
                 // При ошибке показываем формы входа
                 hideMainContent();
@@ -831,6 +888,10 @@
                 showNotification('✅ Система аутентификации загружена!', 'success');
                 
             } catch (error) {
+        }
+        
+        // Функция ожидания загрузки Supabase SDK
+        function waitForSupabase() {
                 console.error('❌ Ошибка загрузки скриптов:', error);
                 
                 // Скрываем индикатор загрузки даже при ошибке
