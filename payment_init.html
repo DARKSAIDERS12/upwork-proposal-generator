@@ -216,12 +216,12 @@
     </div>
 
     <script>
-        let currentUser = null;
+        // currentUser объявлен в index.html
         let selectedPlan = null;
         let selectedPrice = null;
         
-        // API URL для ЮKassa (отключен, используем Supabase)
-        // const API_BASE_URL = 'http://localhost:5000/api';
+        // API URL для ЮKassa
+        const API_BASE_URL = 'http://localhost:5000/api';
 
         // Инициализация страницы
         document.addEventListener('DOMContentLoaded', function() {
@@ -274,21 +274,32 @@
                 // Получаем email пользователя
                 const email = document.getElementById('paymentEmail').value;
                 
-                // Создаем платеж через Supabase (демо-режим)
-                // TODO: Интеграция с реальной платежной системой
-                console.log('Создание платежа:', {
-                    user_id: currentUser.id || 1,
-                    plan_type: selectedPlan,
-                    email: email
+                // Создаем платеж через ЮKassa API
+                const response = await fetch(`${API_BASE_URL}/payment/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: currentUser.id || 1,
+                        plan_type: selectedPlan,
+                        email: email,
+                        return_url: window.location.origin + '/payment_success.html'
+                    })
                 });
                 
-                // Демо-режим - имитируем успешное создание платежа
-                const paymentData = {
-                    confirmation_url: 'payment_success.html?plan=' + selectedPlan + '&price=' + selectedPrice
-                };
+                if (!response.ok) {
+                    throw new Error('Ошибка создания платежа');
+                }
                 
-                // Перенаправляем на страницу успешной оплаты
-                window.location.href = paymentData.confirmation_url;
+                const paymentData = await response.json();
+                
+                if (paymentData.confirmation_url) {
+                    // Перенаправляем на страницу оплаты ЮKassa
+                    window.location.href = paymentData.confirmation_url;
+                } else {
+                    throw new Error('Не получен URL для оплаты');
+                }
                 
             } catch (error) {
                 alert('Ошибка создания платежа: ' + error.message);

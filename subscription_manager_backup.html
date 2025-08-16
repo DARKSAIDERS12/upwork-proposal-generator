@@ -212,19 +212,11 @@
         </div>
     </div>
 
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Инициализация Supabase
-        const supabaseUrl = 'https://xykhpnksatwipwcmxwyn.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5a2hwbmtzYXR3aXB3Y214d3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNTAyNjIsImV4cCI6MjA3MDgyNjI2Mn0.PSARsuv14dI7xq35xvgVoxwjptb4cm8Ywb3bYZhY0KM';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    </script>
-    <script>
-        let currentUser = null;
+        // currentUser объявлен в index.html
         
-        // API URL для ЮKassa (отключен, используем Supabase)
-        // const API_BASE_URL = 'http://localhost:5000/api';
+        // API URL для ЮKassa
+        const API_BASE_URL = 'http://localhost:5000/api';
 
         // Инициализация страницы
         document.addEventListener('DOMContentLoaded', function() {
@@ -272,19 +264,17 @@
             const container = document.getElementById('currentSubscription');
             
             try {
-                // Пытаемся получить данные из Supabase
-                const { data, error } = await supabase
-                    .from('user_profiles')
-                    .select('subscription, daily_remaining')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                if (data && !error && data.subscription && data.subscription !== 'free') {
-                    displaySubscriptionFromSupabase(data);
-                    return;
+                // Пытаемся получить данные из API
+                const response = await fetch(`${API_BASE_URL}/subscription/status/${currentUser.id || 1}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.subscription && data.subscription.status !== 'free') {
+                        displaySubscriptionFromAPI(data.subscription);
+                        return;
+                    }
                 }
             } catch (error) {
-                console.error('Ошибка загрузки подписки из Supabase:', error);
+                console.error('Ошибка загрузки подписки из API:', error);
             }
             
             // Fallback к локальным данным
@@ -375,19 +365,15 @@
             const container = document.getElementById('paymentHistory');
             
             try {
-                // Пытаемся получить данные из Supabase
-                const { data, error } = await supabase
-                    .from('payment_history')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false });
-                
-                if (data && !error && data.length > 0) {
-                    displayPaymentHistoryFromSupabase(data);
+                // Пытаемся получить данные из API
+                const response = await fetch(`${API_BASE_URL}/payment/history/${currentUser.id || 1}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayPaymentHistoryFromAPI(data.payments);
                     return;
                 }
             } catch (error) {
-                console.error('Ошибка загрузки истории платежей из Supabase:', error);
+                console.error('Ошибка загрузки истории платежей из API:', error);
             }
             
             // Fallback к локальным данным
@@ -545,91 +531,6 @@
                         <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
                             🚀 Оформить подписку
                         </a>
-                    </div>
-                `;
-            }
-        }
-
-        // Отображение подписки из Supabase
-        function displaySubscriptionFromSupabase(data) {
-            const container = document.getElementById('currentSubscription');
-            const subscriptionInfo = getSubscriptionInfo(data.subscription);
-            
-            container.innerHTML = `
-                <div class="bg-white rounded-lg shadow-lg p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800">Текущая подписка</h2>
-                        <div class="px-4 py-2 rounded-full text-white font-semibold status-active">
-                            Активна
-                        </div>
-                    </div>
-                    
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">${subscriptionInfo.name}</h3>
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Тариф:</span>
-                                    <span class="font-semibold">${subscriptionInfo.name}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">AI провайдер:</span>
-                                    <span class="font-semibold">${subscriptionInfo.aiProvider}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Дневной лимит:</span>
-                                    <span class="font-semibold">${subscriptionInfo.dailyLimit === '∞' ? 'Безлимитно' : subscriptionInfo.dailyLimit + ' предложений'}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Стоимость:</span>
-                                    <span class="font-semibold">${subscriptionInfo.price}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h3 class="text-xl font-semibold text-gray-800 mb-4">Статистика</h3>
-                            <div class="space-y-3">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">Осталось сегодня:</span>
-                                    <span class="font-semibold">${data.daily_remaining || subscriptionInfo.dailyLimit}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Отображение истории платежей из Supabase
-        function displayPaymentHistoryFromSupabase(payments) {
-            const container = document.getElementById('paymentHistory');
-            
-            if (payments && payments.length > 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">История платежей</h2>
-                        <div class="space-y-4">
-                            ${payments.map(payment => `
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                    <div>
-                                        <div class="font-semibold text-gray-800">${payment.plan_type || 'Premium'}</div>
-                                        <div class="text-sm text-gray-600">${new Date(payment.created_at).toLocaleDateString('ru-RU')}</div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="font-semibold text-gray-800">${payment.amount || 1500} ₽</div>
-                                        <div class="text-sm text-green-600">Оплачен</div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">История платежей</h2>
-                        <p class="text-gray-600">У вас пока нет платежей</p>
                     </div>
                 `;
             }

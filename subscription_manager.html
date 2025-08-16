@@ -212,19 +212,11 @@
         </div>
     </div>
 
-    <!-- Supabase SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        // Инициализация Supabase
-        const supabaseUrl = 'https://xykhpnksatwipwcmxwyn.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5a2hwbmtzYXR3aXB3Y214d3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNTAyNjIsImV4cCI6MjA3MDgyNjI2Mn0.PSARsuv14dI7xq35xvgVoxwjptb4cm8Ywb3bYZhY0KM';
-        const supabase = createClient(supabaseUrl, supabaseKey);
-    </script>
-    <script>
-        let currentUser = null;
+        // currentUser объявлен в index.html
         
-        // API URL для ЮKassa (отключен, используем Supabase)
-        // const API_BASE_URL = 'http://localhost:5000/api';
+        // API URL для ЮKassa
+        const API_BASE_URL = 'http://localhost:5000/api';
 
         // Инициализация страницы
         document.addEventListener('DOMContentLoaded', function() {
@@ -238,13 +230,25 @@
             
             if (sessionToken) {
                 try {
-                    // Используем Supabase вместо внешнего API
-                    const { data: { user }, error } = await supabase.auth.getUser();
-                    if (user && !error) {
-                        currentUser = user;
+                    const response = await fetch('https://upwork-auth-server.onrender.com/api/user', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${sessionToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        currentUser = data.user;
                         document.getElementById('userInfo').classList.remove('hidden');
                         document.getElementById('userEmail').textContent = currentUser.email;
                         return; // Успешная аутентификация
+                    } else {
+                        // Токен недействителен
+                        localStorage.removeItem('sessionToken');
+                        localStorage.removeItem('user');
+                    }
                 } catch (error) {
                     console.error('Ошибка проверки аутентификации:', error);
                     // При сетевых ошибках не перенаправляем сразу
@@ -289,19 +293,17 @@
             const container = document.getElementById('currentSubscription');
             
             try {
-                // Пытаемся получить данные из Supabase
-                const { data, error } = await supabase
-                    .from('user_profiles')
-                    .select('subscription, daily_remaining')
-                    .eq('id', currentUser.id)
-                    .single();
-                
-                if (data && !error && data.subscription && data.subscription !== 'free') {
-                    displaySubscriptionFromSupabase(data);
-                    return;
+                // Пытаемся получить данные из API
+                const response = await fetch(`${API_BASE_URL}/subscription/status/${currentUser.id || 1}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.subscription && data.subscription.status !== 'free') {
+                        displaySubscriptionFromAPI(data.subscription);
+                        return;
+                    }
                 }
             } catch (error) {
-                console.error('Ошибка загрузки подписки из Supabase:', error);
+                console.error('Ошибка загрузки подписки из API:', error);
             }
             
             // Fallback к локальным данным
@@ -381,19 +383,15 @@
             const container = document.getElementById('paymentHistory');
             
             try {
-                // Пытаемся получить данные из Supabase
-                const { data, error } = await supabase
-                    .from('payment_history')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .order('created_at', { ascending: false });
-                
-                if (data && !error) {
-                    displayPaymentHistoryFromSupabase(data);
+                // Пытаемся получить данные из API
+                const response = await fetch(`${API_BASE_URL}/payment/history/${currentUser.id || 1}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    displayPaymentHistoryFromAPI(data.payments);
                     return;
                 }
             } catch (error) {
-                console.error('Ошибка загрузки истории платежей из Supabase:', error);
+                console.error('Ошибка загрузки истории платежей из API:', error);
             }
             
             // Fallback к локальным данным
@@ -456,8 +454,8 @@
             }
         }
         
-        // Отображение истории платежей из Supabase
-        function displayPaymentHistoryFromSupabase(payments) {
+        // Отображение истории платежей из API
+        function displayPaymentHistoryFromAPI(payments) {
             const container = document.getElementById('paymentHistory');
             
             if (payments && payments.length > 0) {
@@ -481,16 +479,16 @@
                                             <td class="py-3 px-4">${new Date(payment.created_at).toLocaleDateString('ru-RU')}</td>
                                             <td class="py-3 px-4">
                                                 <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                                    ${payment.plan_type || 'Premium'}
+                                                    ${payment.plan_type.toUpperCase()}
                                                 </span>
                                             </td>
-                                            <td class="py-3 px-4 font-semibold">${payment.amount || 1500} ₽</td>
+                                            <td class="py-3 px-4 font-semibold">${payment.amount.toLocaleString()} ${payment.currency}</td>
                                             <td class="py-3 px-4">
                                                 <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                                    Успешно
+                                                    ${payment.status === 'succeeded' ? 'Успешно' : payment.status}
                                                 </span>
                                             </td>
-                                            <td class="py-3 px-4 text-sm text-gray-500">${payment.id || 'SUPABASE_' + Date.now()}</td>
+                                            <td class="py-3 px-4 text-sm text-gray-500">${payment.payment_id}</td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
