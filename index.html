@@ -715,10 +715,11 @@
                     console.log("✅ userInfo скрыт");
                 }
                 
-                console.log("🎉 hideMainContent() завершена успешно");
-                
-
         // Функция ожидания загрузки Supabase SDK
+            } catch (error) {
+                console.error(`❌ Ошибка в hideMainContent(): ${error.message}`);
+            }
+        }
         function waitForSupabase() {
             return new Promise((resolve) => {
                 if (typeof window.supabase !== "undefined") {
