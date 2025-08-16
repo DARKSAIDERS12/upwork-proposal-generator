@@ -636,8 +636,10 @@
         function upgradeToPremium() {
             console.log('🔄 Попытка обновления до Premium...');
             // Логика обновления до Premium
-            showNotification('💎 Функция обновления в разработке', 'info');
+            // Логика обновления до Premium
             closeUpgradeModal();
+            // Перенаправляем на страницу управления подписками
+            window.location.href = "subscription_manager.html";
         }
         
         // Функция GitHub входа - определяем сразу
@@ -981,9 +983,9 @@
             if (selectPremiumBtn) {
                 selectPremiumBtn.addEventListener('click', () => {
                     console.log('🔄 Пользователь выбрал Premium план');
-                    showNotification('💎 Функция обновления в разработке', 'info');
                     closeUpgradeModal();
-                });
+                    // Перенаправляем на страницу управления подписками
+                    window.location.href = "subscription_manager.html";
             }
         }
         
