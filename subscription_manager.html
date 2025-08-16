@@ -25,6 +25,54 @@
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
+    <!-- Проверка аутентификации -->
+    <script>
+        // Проверяем, авторизован ли пользователь
+        function checkAuth() {
+            console.log('🔄 Проверяем аутентификацию...');
+            
+            // Проверяем localStorage
+            const user = localStorage.getItem('user');
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    console.log('✅ Пользователь найден в localStorage:', userData.email);
+                    
+                    // Показываем информацию о пользователе
+                    const userInfo = document.getElementById('userInfo');
+                    const userEmail = document.getElementById('userEmail');
+                    
+                    if (userInfo && userEmail) {
+                        userEmail.textContent = userData.email;
+                        userInfo.classList.remove('hidden');
+                        console.log('✅ Информация о пользователе показана');
+                    }
+                    
+                    // Загружаем данные подписки
+                    if (typeof loadSubscriptionData === 'function') {
+                        loadSubscriptionData();
+                    }
+                    
+                    return true;
+                } catch (error) {
+                    console.error('❌ Ошибка парсинга данных пользователя:', error);
+                }
+            }
+            
+            console.log('❌ Пользователь не авторизован, перенаправляем на вход');
+            // Перенаправляем на главную страницу для входа
+            window.location.href = 'index.html';
+            return false;
+        }
+        
+        // Проверяем аутентификацию при загрузке страницы
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', checkAuth);
+        } else {
+            checkAuth();
+        }
+    </script>
+    
     <!-- Навигация -->
     <nav class="bg-white shadow-lg">
         <div class="container mx-auto px-4">
@@ -36,7 +84,7 @@
                     <a href="index.html" class="text-gray-600 hover:text-blue-600 transition duration-200">← Назад к генератору</a>
                     <div id="userInfo" class="hidden">
                         <span id="userEmail" class="text-gray-700 font-medium"></span>
-                        <button onclick="logout()" class="ml-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-200">
+                        <button id="logoutBtn" class="ml-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-200">
                             Выйти
                         </button>
                     </div>
@@ -624,9 +672,22 @@
         }
 
         function logout() {
+            console.log('🔄 Выход из системы...');
             localStorage.removeItem('user');
+            console.log('✅ Данные пользователя удалены из localStorage');
             window.location.href = 'index.html';
         }
+        
+        // Добавляем обработчик для кнопки выхода
+        document.addEventListener('DOMContentLoaded', function() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', logout);
+                console.log('✅ Обработчик для кнопки выхода добавлен');
+            } else {
+                console.log('❌ Кнопка выхода не найдена');
+            }
+        });
     </script>
 </body>
 </html>
