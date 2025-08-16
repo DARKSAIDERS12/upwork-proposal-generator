@@ -214,7 +214,7 @@
                             <li>Приоритетная поддержка</li>
                             <li>Экспорт предложений</li>
                         </ul>
-                        <button id="openSubscriptionBtn" class="btn-primary">Выбрать Premium</button>
+                        <button id="selectPremiumBtn" class="btn-primary">Выбрать Premium</button>
                     </div>
                 </div>
             </div>
@@ -591,9 +591,9 @@
                 return;
             }
             
-            console.log('🔄 Открываем страницу управления подпиской...');
-            // Открываем страницу управления подпиской
-            window.open('subscription_manager.html', '_blank');
+            console.log('🔄 Открываем модальное окно с тарифами...');
+            // Открываем модальное окно с тарифами
+            openUpgradeModal();
         }
         
         function setupYandexGPTAPI() {
@@ -974,6 +974,16 @@
             const upgradeBtn = document.getElementById('upgradeBtn');
             if (upgradeBtn) {
                 upgradeBtn.addEventListener('click', openUpgradeModal);
+            }
+            
+            // Обработчик для кнопки выбора Premium в модальном окне
+            const selectPremiumBtn = document.getElementById('selectPremiumBtn');
+            if (selectPremiumBtn) {
+                selectPremiumBtn.addEventListener('click', () => {
+                    console.log('🔄 Пользователь выбрал Premium план');
+                    showNotification('💎 Функция обновления в разработке', 'info');
+                    closeUpgradeModal();
+                });
             }
         }
         
