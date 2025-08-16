@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Login - Диагностика входа</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Диагностика проблемы входа</h1>
+    
+    <div class="debug-section info">
+        <h3>📋 Инструкции:</h3>
+        <ol>
+            <li>Откройте консоль браузера (F12 → Console)</li>
+            <li>Нажмите "Тест элементов" для проверки HTML</li>
+            <li>Попробуйте войти с тестовыми данными</li>
+            <li>Следите за логами в консоли</li>
+        </ol>
+    </div>
+    
+    <div class="debug-section">
+        <h3>🧪 Тест HTML элементов:</h3>
+        <button onclick="testHTMLElements()">Тест элементов</button>
+        <div id="htmlTestResult" class="log"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>🔐 Тест входа:</h3>
+        <form id="testLoginForm">
+            <input type="email" id="testEmail" placeholder="test@example.com" value="test@example.com">
+            <input type="password" id="testPassword" placeholder="password" value="testpass123">
+            <button type="submit">Тест входа</button>
+        </form>
+        <div id="loginTestResult" class="log"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>🧪 Тесты:</h3>
+        <button onclick="testShowMainContent()">Тест showMainContent()</button>
+        <button onclick="testShowMainContentLogic()">Тест логики переключения</button>
+        <button onclick="createTestElements()">Создать тестовые элементы</button>
+        <button onclick="checkVariables()">Проверить переменные</button>
+        <div id="variablesStatus" class="log"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>🔗 Ссылки:</h3>
+        <a href="index.html" target="_blank">Открыть основной сайт</a>
+    </div>
+
+    <script>
+        // Глобальные переменные для тестирования
+        let currentUser = null;
+        let isAuthenticated = false;
+        
+        // Функция логирования
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.createElement('div');
+            logDiv.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.className = type;
+            console.log(message);
+            
+            // Добавляем в соответствующий результат
+            if (type === 'error') {
+                document.getElementById('loginTestResult').appendChild(logDiv);
+            } else if (type === 'success') {
+                document.getElementById('htmlTestResult').appendChild(logDiv);
+            } else {
+                document.getElementById('variablesStatus').appendChild(logDiv);
+            }
+        }
+        
+        // Тест HTML элементов
+        function testHTMLElements() {
+            log('🧪 Начинаем тест HTML элементов...', 'info');
+            
+            const elements = [
+                'authForms',
+                'mainApp', 
+                'userInfo',
+                'userEmail',
+                'loginForm',
+                'registerForm'
+            ];
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    log(`✅ ${id}: найден`, 'success');
+                    log(`   - display: ${element.style.display}`, 'info');
+                    log(`   - visible: ${element.offsetParent !== null}`, 'info');
+                } else {
+                    log(`❌ ${id}: НЕ НАЙДЕН`, 'error');
+                }
+            });
+            
+            log('🎯 Тест HTML элементов завершен', 'success');
+        }
+        
+        // Тест входа
+        function testLogin() {
+            log('🔐 Начинаем тест входа...', 'info');
+            
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            log(`📧 Email: ${email}`, 'info');
+            log(`🔑 Password: ${password}`, 'info');
+            
+            // Симулируем успешный вход
+            setTimeout(() => {
+                log('✅ Вход выполнен успешно (симуляция)', 'success');
+                
+                // Создаем тестового пользователя
+                currentUser = {
+                    email: email,
+                    id: 'test-user-123',
+                    created_at: new Date().toISOString()
+                };
+                isAuthenticated = true;
+                
+                log(`👤 currentUser: ${JSON.stringify(currentUser)}`, 'success');
+                log(`🔐 isAuthenticated: ${isAuthenticated}`, 'success');
+                
+                // Тестируем функции переключения
+                testShowMainContent();
+                
+            }, 1000);
+        }
+        
+        // Тест функции showMainContent
+        function testShowMainContent() {
+            log('🔄 Тестируем showMainContent()...', 'info');
+            
+            try {
+                // Вместо iframe используем прямую проверку элементов на текущей странице
+                log('🔍 Проверяем элементы на текущей странице:', 'info');
+                
+                const elements = [
+                    'authForms',
+                    'mainApp', 
+                    'userInfo',
+                    'userEmail',
+                    'loginForm',
+                    'registerForm'
+                ];
+                
+                let foundElements = 0;
+                elements.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        log(`✅ ${id}: найден`, 'success');
+                        log(`   - display: ${element.style.display}`, 'info');
+                        log(`   - visible: ${element.offsetParent !== null}`, 'info');
+                        foundElements++;
+                    } else {
+                        log(`❌ ${id}: НЕ НАЙДЕН`, 'error');
+                    }
+                });
+                
+                log(`📊 Найдено элементов: ${foundElements}/${elements.length}`, 'info');
+                
+                if (foundElements === elements.length) {
+                    log('✅ Все элементы найдены!', 'success');
+                    
+                    // Тестируем функции переключения
+                    log('🧪 Тестируем функции переключения...', 'info');
+                    
+                    // Создаем тестовые элементы если их нет
+                    createTestElements();
+                    
+                    // Тестируем showMainContent
+                    testShowMainContentLogic();
+                    
+                } else {
+                    log('❌ Не все элементы найдены', 'error');
+                    log('💡 Создаем тестовые элементы...', 'info');
+                    createTestElements();
+                }
+                
+            } catch (error) {
+                log(`❌ Ошибка в testShowMainContent: ${error.message}`, 'error');
+            }
+        }
+        
+        // Создаем тестовые элементы для демонстрации
+        function createTestElements() {
+            log('🔨 Создаем тестовые элементы...', 'info');
+            
+            // Создаем контейнер для тестовых элементов
+            let testContainer = document.getElementById('testElements');
+            if (!testContainer) {
+                testContainer = document.createElement('div');
+                testContainer.id = 'testElements';
+                testContainer.className = 'debug-section';
+                testContainer.innerHTML = '<h3>🧪 Тестовые элементы</h3>';
+                document.body.appendChild(testContainer);
+            }
+            
+            // Создаем элементы если их нет
+            if (!document.getElementById('authForms')) {
+                const authForms = document.createElement('div');
+                authForms.id = 'authForms';
+                authForms.innerHTML = '<p>🔐 Формы аутентификации (тест)</p>';
+                testContainer.appendChild(authForms);
+                log('✅ Создан authForms', 'success');
+            }
+            
+            if (!document.getElementById('mainApp')) {
+                const mainApp = document.createElement('div');
+                mainApp.id = 'mainApp';
+                mainApp.innerHTML = '<p>🎉 Личный кабинет (тест)</p>';
+                mainApp.style.display = 'none';
+                testContainer.appendChild(mainApp);
+                log('✅ Создан mainApp', 'success');
+            }
+            
+            if (!document.getElementById('userInfo')) {
+                const userInfo = document.createElement('div');
+                userInfo.id = 'userInfo';
+                userInfo.innerHTML = '<p>👤 Информация пользователя (тест)</p>';
+                testContainer.appendChild(userInfo);
+                log('✅ Создан userInfo', 'success');
+            }
+            
+            if (!document.getElementById('userEmail')) {
+                const userEmail = document.createElement('span');
+                userEmail.id = 'userEmail';
+                userEmail.textContent = 'test@example.com';
+                testContainer.appendChild(userEmail);
+                log('✅ Создан userEmail', 'success');
+            }
+            
+            log('🎯 Тестовые элементы созданы', 'success');
+        }
+        
+        // Тестируем логику showMainContent
+        function testShowMainContentLogic() {
+            log('🧪 Тестируем логику showMainContent...', 'info');
+            
+            try {
+                const authForms = document.getElementById('authForms');
+                const mainApp = document.getElementById('mainApp');
+                const userInfo = document.getElementById('userInfo');
+                const userEmail = document.getElementById('userEmail');
+                
+                if (authForms && mainApp && userInfo && userEmail) {
+                    log('✅ Все элементы готовы для тестирования', 'success');
+                    
+                    // Тестируем скрытие форм
+                    authForms.style.display = 'none';
+                    log('✅ authForms скрыт', 'success');
+                    
+                    // Тестируем показ основного приложения
+                    mainApp.style.display = 'block';
+                    log('✅ mainApp показан', 'success');
+                    
+                    // Тестируем показ информации пользователя
+                    userInfo.style.display = 'block';
+                    log('✅ userInfo показан', 'success');
+                    
+                    // Тестируем обновление email
+                    if (currentUser) {
+                        userEmail.textContent = currentUser.email;
+                        log(`✅ userEmail обновлен: ${userEmail.textContent}`, 'success');
+                    }
+                    
+                    log('🎉 Логика showMainContent протестирована успешно!', 'success');
+                    
+                    // Показываем результат
+                    setTimeout(() => {
+                        log('🔄 Возвращаем исходное состояние...', 'info');
+                        authForms.style.display = 'block';
+                        mainApp.style.display = 'none';
+                        userInfo.style.display = 'none';
+                        log('✅ Исходное состояние восстановлено', 'success');
+                    }, 3000);
+                    
+                } else {
+                    log('❌ Не все элементы готовы для тестирования', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Ошибка в testShowMainContentLogic: ${error.message}`, 'error');
+            }
+        }
+        
+        // Проверка переменных
+        function checkVariables() {
+            log('📊 Проверяем переменные...', 'info');
+            log(`👤 currentUser: ${currentUser ? JSON.stringify(currentUser) : 'null'}`, 'info');
+            log(`🔐 isAuthenticated: ${isAuthenticated}`, 'info');
+            log(`🌐 window.location: ${window.location.href}`, 'info');
+            log(`📄 document.title: ${document.title}`, 'info');
+        }
+        
+        // Обработчик формы
+        document.getElementById('testLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            testLogin();
+        });
+        
+        // Инициализация
+        log('🚀 Страница диагностики загружена', 'success');
+        log('📋 Готов к тестированию', 'info');
+    </script>
+</body>
+</html>

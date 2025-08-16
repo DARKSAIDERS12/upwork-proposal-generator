@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Упрощенный тест входа</title>
+    <title>Тест основной логики</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
@@ -15,14 +15,22 @@
         .success { background-color: #d4edda; }
         .error { background-color: #f8d7da; }
         .info { background-color: #d1ecf1; }
+        .auth-form { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .tab-btn { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .tab-btn.active { background-color: #007bff; color: white; }
     </style>
 </head>
 <body>
-    <h1>🧪 Упрощенный тест входа</h1>
+    <h1>🧪 Тест основной логики index.html</h1>
     
     <!-- Формы аутентификации -->
     <div id="authForms" class="section">
-        <h2>🔐 Формы входа</h2>
+        <h2>🔐 Формы аутентификации</h2>
+        
+        <div class="auth-tabs">
+            <button class="tab-btn active" data-tab="login">Вход</button>
+            <button class="tab-btn" data-tab="register">Регистрация</button>
+        </div>
         
         <div id="loginForm" class="auth-form">
             <h3>Вход в систему</h3>
@@ -42,9 +50,6 @@
                 <button type="submit">Зарегистрироваться</button>
             </form>
         </div>
-        
-        <button onclick="showTab('login')">Показать вход</button>
-        <button onclick="showTab('register')">Показать регистрацию</button>
     </div>
     
     <!-- Основное приложение -->
@@ -57,19 +62,20 @@
         <button onclick="handleLogout()">Выйти</button>
     </div>
     
-    <!-- Логи -->
-    <div class="section">
-        <h3>📊 Логи</h3>
-        <button onclick="clearLogs()">Очистить логи</button>
-        <div id="logs"></div>
-    </div>
-    
     <!-- Тесты -->
     <div class="section">
-        <h3>🧪 Тесты</h3>
+        <h3>🧪 Тесты:</h3>
         <button onclick="testShowMainContent()">Тест showMainContent()</button>
         <button onclick="testHideMainContent()">Тест hideMainContent()</button>
+        <button onclick="testShowTab()">Тест showTab()</button>
         <button onclick="checkVariables()">Проверить переменные</button>
+        <button onclick="clearLogs()">Очистить логи</button>
+    </div>
+    
+    <!-- Логи -->
+    <div class="section">
+        <h3>📊 Логи:</h3>
+        <div id="logs"></div>
     </div>
 
     <script>
@@ -167,7 +173,7 @@
             hideMainContent();
         }
         
-        // Функции переключения контента
+        // Функции переключения контента (скопированы из index.html)
         function showMainContent() {
             log('🔄 showMainContent() вызвана', 'info');
             log(`📧 currentUser: ${currentUser ? currentUser.email : 'null'}`, 'info');
@@ -186,14 +192,14 @@
                 log(`- userEmail: ${userEmail ? 'найден' : 'НЕ НАЙДЕН'}`, userEmail ? 'success' : 'error');
                 
                 if (authForms) {
-                    authForms.classList.add('hidden');
+                    authForms.style.display = 'none';
                     log('✅ authForms скрыт', 'success');
                 } else {
                     log('❌ authForms не найден', 'error');
                 }
                 
                 if (mainApp) {
-                    mainApp.classList.remove('hidden');
+                    mainApp.style.display = 'block';
                     log('✅ mainApp показан', 'success');
                 } else {
                     log('❌ mainApp не найден', 'error');
@@ -229,12 +235,12 @@
                 const userInfo = document.getElementById('userInfo');
                 
                 if (authForms) {
-                    authForms.classList.remove('hidden');
+                    authForms.style.display = 'block';
                     log('✅ authForms показан', 'success');
                 }
                 
                 if (mainApp) {
-                    mainApp.classList.add('hidden');
+                    mainApp.style.display = 'none';
                     log('✅ mainApp скрыт', 'success');
                 }
                 
@@ -250,7 +256,7 @@
             }
         }
         
-        // Функция переключения вкладок
+        // Функция переключения вкладок (скопирована из index.html)
         function showTab(tabName) {
             log(`🔄 Переключение на вкладку: ${tabName}`, 'info');
             
@@ -258,16 +264,31 @@
                 // Скрываем все формы
                 const forms = document.querySelectorAll('.auth-form');
                 forms.forEach(form => {
-                    form.classList.add('hidden');
+                    form.style.display = 'none';
                 });
                 
                 // Показываем нужную форму
                 const targetForm = document.getElementById(tabName + 'Form');
                 if (targetForm) {
-                    targetForm.classList.remove('hidden');
+                    targetForm.style.display = 'block';
                     log(`✅ Показана форма: ${tabName}`, 'success');
                 } else {
                     log(`❌ Форма не найдена: ${tabName}`, 'error');
+                }
+                
+                // Обновляем активную вкладку
+                const buttons = document.querySelectorAll('.tab-btn');
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Находим кнопку по data-tab
+                const targetBtn = document.querySelector(`[data-tab="${tabName}"]`);
+                if (targetBtn) {
+                    targetBtn.classList.add('active');
+                    log(`✅ Активирована кнопка: ${tabName}`, 'success');
+                } else {
+                    log(`❌ Кнопка не найдена: ${tabName}`, 'error');
                 }
                 
             } catch (error) {
@@ -288,6 +309,12 @@
             hideMainContent();
         }
         
+        function testShowTab() {
+            log('🧪 Тестируем showTab()...', 'info');
+            showTab('register');
+            setTimeout(() => showTab('login'), 2000);
+        }
+        
         function checkVariables() {
             log('📊 Проверяем переменные...', 'info');
             log(`👤 currentUser: ${currentUser ? JSON.stringify(currentUser) : 'null'}`, 'info');
@@ -304,8 +331,8 @@
         document.getElementById('registerFormElement').addEventListener('submit', handleRegister);
         
         // Инициализация
-        log('🚀 Упрощенная страница загружена', 'success');
-        log('📋 Готов к тестированию', 'info');
+        log('🚀 Тестовая страница загружена', 'success');
+        log('📋 Готов к тестированию основной логики', 'info');
         showTab('login');
     </script>
 </body>
