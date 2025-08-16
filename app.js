@@ -1,5 +1,5 @@
 // Глобальные переменные - ОБНОВЛЕНО 14.08.2025 22:35 - PREMIUM 1500₽
-let currentUser = null;
+// currentUser и isAuthenticated теперь объявлены в index.html
 let stripe = null;
 let sessionToken = localStorage.getItem('sessionToken');
 
