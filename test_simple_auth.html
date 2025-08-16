@@ -51,8 +51,13 @@
         </div>
     </div>
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
+        // Используем Supabase вместо внешнего API
+        const supabaseUrl = 'https://xykhpnksatwipwcmxwyn.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5a2hwbmtzYXR3aXB3Y214d3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNTAyNjIsImV4cCI6MjA3MDgyNjI2Mn0.PSARsuv14dI7xq35xvgVoxwjptb4cm8Ywb3bYZhY0KM';
+        const supabase = createClient(supabaseUrl, supabaseKey);
         
         function log(message) {
             const timestamp = new Date().toLocaleTimeString();
@@ -79,24 +84,21 @@
         }
 
         async function checkServer() {
-            log('🔍 Проверка сервера...');
+            log('🔍 Проверка Supabase...');
             try {
-                const response = await fetch(`${API_BASE_URL}/health`);
-                log(`Статус ответа: ${response.status}`);
+                // Проверяем подключение к Supabase
+                const { data, error } = await supabase.from('user_profiles').select('count').limit(1);
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    log(`Данные сервера: ${JSON.stringify(data)}`);
+                if (!error) {
+                    log(`Подключение к Supabase успешно`);
                     showResult('serverResult', 
-                        `✅ Сервер работает!<br>
-                         📊 Статус: ${data.status}<br>
-                         💾 База данных: ${data.database}<br>
-                         👥 Пользователей: ${data.user_count}<br>
-                         🕐 Время: ${data.timestamp}`, 'success');
+                        `✅ Supabase работает!<br>
+                         📊 Статус: Подключено<br>
+                         💾 База данных: Доступна<br>
+                         🔐 Аутентификация: Готова`, 'success');
                 } else {
-                    const errorText = await response.text();
-                    log(`Ошибка сервера: ${errorText}`);
-                    showResult('serverResult', `❌ Ошибка сервера: ${response.status}`, 'error');
+                    log(`Ошибка Supabase: ${error.message}`);
+                    showResult('serverResult', `❌ Ошибка Supabase: ${error.message}`, 'error');
                 }
             } catch (error) {
                 log(`Сетевая ошибка: ${error.message}`);
@@ -111,37 +113,25 @@
             log(`🔐 Попытка входа: ${email}`);
             
             try {
-                const response = await fetch(`${API_BASE_URL}/login`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
                 });
                 
-                log(`Статус входа: ${response.status}`);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    log(`Данные входа: ${JSON.stringify(data, null, 2)}`);
+                if (!error && data.user) {
+                    log(`Данные входа: ${JSON.stringify(data.user, null, 2)}`);
                     showResult('loginResult', 
                         `✅ Вход успешен!<br>
                          👤 Email: ${data.user.email}<br>
-                         📊 Подписка: ${data.user.subscription}<br>
-                         🎯 Лимит в день: ${data.user.daily_proposals}<br>
-                         ⏳ Осталось: ${data.user.daily_remaining}<br>
-                         🔑 Токен: ${data.session_token.substring(0, 20)}...`, 'success');
+                         🆔 ID: ${data.user.id}<br>
+                         📅 Создан: ${new Date(data.user.created_at).toLocaleDateString()}`, 'success');
                     
-                    // Сохраняем токен для дальнейших тестов
-                    window.currentToken = data.session_token;
-                    
-                    // Тестируем получение пользователя
-                    setTimeout(() => testGetUser(data.session_token), 1000);
+                    // Сохраняем пользователя для дальнейших тестов
+                    window.currentUser = data.user;
                     
                 } else {
-                    const errorData = await response.json();
-                    log(`Ошибка входа: ${JSON.stringify(errorData)}`);
-                    showResult('loginResult', `❌ Ошибка входа: ${errorData.error}`, 'error');
+                    log(`Ошибка входа: ${error.message}`);
+                    showResult('loginResult', `❌ Ошибка входа: ${error.message}`, 'error');
                 }
             } catch (error) {
                 log(`Сетевая ошибка при входе: ${error.message}`);
@@ -149,28 +139,7 @@
             }
         }
 
-        async function testGetUser(token) {
-            log(`📋 Тест получения данных пользователя...`);
-            try {
-                const response = await fetch(`${API_BASE_URL}/user`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    log(`✅ Данные пользователя получены: ${JSON.stringify(data.user)}`);
-                } else {
-                    const errorData = await response.json();
-                    log(`❌ Ошибка получения пользователя: ${JSON.stringify(errorData)}`);
-                }
-            } catch (error) {
-                log(`❌ Сетевая ошибка при получении пользователя: ${error.message}`);
-            }
-        }
+
 
         async function testRegister() {
             const email = document.getElementById('regEmail').value;
@@ -184,30 +153,21 @@
             log(`📝 Попытка регистрации: ${email}`);
             
             try {
-                const response = await fetch(`${API_BASE_URL}/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ email, password })
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
                 });
                 
-                log(`Статус регистрации: ${response.status}`);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    log(`Данные регистрации: ${JSON.stringify(data, null, 2)}`);
+                if (!error && data.user) {
+                    log(`Данные регистрации: ${JSON.stringify(data.user, null, 2)}`);
                     showResult('regResult', 
                         `✅ Регистрация успешна!<br>
                          👤 Email: ${data.user.email}<br>
-                         📊 Подписка: ${data.user.subscription}<br>
-                         🎯 Лимит в день: ${data.user.daily_proposals}<br>
-                         ⏳ Осталось: ${data.user.daily_remaining}<br>
-                         🔑 Токен: ${data.session_token.substring(0, 20)}...`, 'success');
+                         🆔 ID: ${data.user.id}<br>
+                         📅 Создан: ${new Date(data.user.created_at).toLocaleDateString()}`, 'success');
                 } else {
-                    const errorData = await response.json();
-                    log(`Ошибка регистрации: ${JSON.stringify(errorData)}`);
-                    showResult('regResult', `❌ Ошибка регистрации: ${errorData.error}`, 'error');
+                    log(`Ошибка регистрации: ${error.message}`);
+                    showResult('regResult', `❌ Ошибка регистрации: ${error.message}`, 'error');
                 }
             } catch (error) {
                 log(`Сетевая ошибка при регистрации: ${error.message}`);

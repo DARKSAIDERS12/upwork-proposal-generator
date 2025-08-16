@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест основной страницы</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест основной страницы сайта</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Информация о тесте</h3>
+        <p>Эта страница проверяет работоспособность основной страницы сайта после всех исправлений.</p>
+        <p><strong>URL для тестирования:</strong> <a href="http://localhost:8000" target="_blank">http://localhost:8000</a></p>
+    </div>
+
+    <div class="test-section">
+        <h3>🔍 Проверка файлов</h3>
+        <button onclick="checkFiles()">Проверить наличие файлов</button>
+        <div id="filesCheck" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🚀 Тест загрузки</h3>
+        <button onclick="testLoading()">Тест загрузки скриптов</button>
+        <div id="loadingTest" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔐 Тест аутентификации</h3>
+        <button onclick="testAuth()">Тест функций аутентификации</button>
+        <div id="authTest" class="log"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>📱 Открыть основную страницу</h3>
+        <button onclick="openMainPage()">Открыть index.html</button>
+        <p><em>Откроет основную страницу в новом окне для ручного тестирования</em></p>
+    </div>
+
+    <script>
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            element.innerHTML += logEntry + '\n';
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function checkFiles() {
+            const logElement = document.getElementById('filesCheck');
+            logElement.innerHTML = '';
+            
+            log(logElement, '🔍 Проверяем наличие основных файлов...');
+            
+            // Проверяем основные файлы
+            const requiredFiles = [
+                'index.html',
+                'auth.js', 
+                'app.js',
+                'styles.css'
+            ];
+            
+            requiredFiles.forEach(file => {
+                fetch(file)
+                    .then(response => {
+                        if (response.ok) {
+                            log(logElement, `✅ ${file} - найден`);
+                        } else {
+                            log(logElement, `❌ ${file} - не найден (${response.status})`);
+                        }
+                    })
+                    .catch(error => {
+                        log(logElement, `❌ ${file} - ошибка: ${error.message}`);
+                    });
+            });
+        }
+
+        function testLoading() {
+            const logElement = document.getElementById('loadingTest');
+            logElement.innerHTML = '';
+            
+            log(logElement, '🚀 Тестируем загрузку скриптов...');
+            
+            // Проверяем загрузку Supabase SDK
+            if (typeof window.supabase !== 'undefined') {
+                log(logElement, '✅ Supabase SDK доступен');
+            } else {
+                log(logElement, '❌ Supabase SDK не загружен');
+            }
+            
+            // Проверяем загрузку auth.js
+            fetch('auth.js')
+                .then(response => response.text())
+                .then(content => {
+                    if (content.includes('initSupabase')) {
+                        log(logElement, '✅ auth.js содержит функцию initSupabase');
+                    } else {
+                        log(logElement, '❌ auth.js не содержит функцию initSupabase');
+                    }
+                })
+                .catch(error => {
+                    log(logElement, `❌ Ошибка загрузки auth.js: ${error.message}`);
+                });
+        }
+
+        function testAuth() {
+            const logElement = document.getElementById('authTest');
+            logElement.innerHTML = '';
+            
+            log(logElement, '🔐 Тестируем функции аутентификации...');
+            
+            // Проверяем, есть ли функции в auth.js
+            fetch('auth.js')
+                .then(response => response.text())
+                .then(content => {
+                    const functions = [
+                        'registerUser',
+                        'loginUser', 
+                        'logoutUser',
+                        'initSupabase'
+                    ];
+                    
+                    functions.forEach(func => {
+                        if (content.includes(func)) {
+                            log(logElement, `✅ Функция ${func} найдена в auth.js`);
+                        } else {
+                            log(logElement, `❌ Функция ${func} не найдена в auth.js`);
+                        }
+                    });
+                })
+                .catch(error => {
+                    log(logElement, `❌ Ошибка проверки auth.js: ${error.message}`);
+                });
+        }
+
+        function openMainPage() {
+            window.open('http://localhost:8000', '_blank');
+        }
+
+        // Автоматическая проверка при загрузке
+        window.addEventListener('load', () => {
+            log('filesCheck', '🔄 Автоматическая проверка файлов...');
+            checkFiles();
+        });
+    </script>
+</body>
+</html>

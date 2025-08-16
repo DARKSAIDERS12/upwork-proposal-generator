@@ -39,8 +39,14 @@
         <div id="logs" class="log"></div>
     </div>
 
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const API_BASE_URL = 'https://upwork-auth-server.onrender.com/api';
+        // Инициализация Supabase вместо внешнего API
+        const supabaseUrl = 'https://xykhpnksatwipwcmxwyn.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5a2hwbmtzYXR3aXB3Y214d3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNTAyNjIsImV4cCI6MjA3MDgyNjI2Mn0.PSARsuv14dI7xq35xvgVoxwjptb4cm8Ywb3bYZhY0KM';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
         let startTime = Date.now();
         
         function log(message) {
@@ -84,20 +90,20 @@
         }
 
         async function checkServerMetrics() {
-            log('🔍 Начинаем проверку метрик сервера...');
+            log('🔍 Начинаем проверку метрик Supabase...');
             
             try {
                 const startTime = Date.now();
-                const response = await fetch(`${API_BASE_URL}/health`);
+                // Проверяем подключение к Supabase
+                const { data, error } = await supabase.from('user_profiles').select('count').limit(1);
                 const responseTime = Date.now() - startTime;
                 
-                if (response.ok) {
-                    const data = await response.json();
-                    updateMetrics(responseTime, data.user_count, data.database);
+                if (!error) {
+                    updateMetrics(responseTime, 'Доступна', 'Подключена');
                     
-                    log(`✅ Сервер отвечает за ${responseTime}ms`);
-                    log(`👥 Пользователей в базе: ${data.user_count}`);
-                    log(`💾 База данных: ${data.database}`);
+                    log(`✅ Supabase отвечает за ${responseTime}ms`);
+                    log(`👥 База данных: Доступна`);
+                    log(`💾 Статус: Подключена`);
                     log(`🕐 Время сервера: ${data.timestamp}`);
                     
                     // Анализ времени ответа
@@ -132,8 +138,8 @@
                     }
                     
                 } else {
-                    log(`❌ Ошибка сервера: ${response.status}`);
-                    showResult(`❌ Сервер недоступен (код: ${response.status})`, 'error');
+                    log(`❌ Ошибка Supabase: ${error.message}`);
+                    showResult(`❌ Supabase недоступен: ${error.message}`, 'error');
                 }
             } catch (error) {
                 log(`❌ Сетевая ошибка: ${error.message}`);
@@ -142,22 +148,20 @@
         }
 
         async function testDatabasePersistence() {
-            log('💾 Тестируем сохранность базы данных...');
+            log('💾 Тестируем сохранность базы данных Supabase...');
             
             const testEmail = `persistence-test-${Date.now()}@example.com`;
             const testPassword = 'testpass123';
             
             try {
-                // 1. Создаем пользователя
+                // 1. Создаем пользователя через Supabase
                 log(`1️⃣ Создаем тестового пользователя: ${testEmail}`);
-                const regResponse = await fetch(`${API_BASE_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: testEmail, password: testPassword })
+                const { data: regData, error: regError } = await supabase.auth.signUp({
+                    email: testEmail,
+                    password: testPassword
                 });
                 
-                if (regResponse.ok) {
-                    const regData = await regResponse.json();
+                if (!regError && regData.user) {
                     log(`✅ Пользователь создан, ID: ${regData.user.id}`);
                     
                     // 2. Ждем 5 секунд
@@ -166,16 +170,15 @@
                     
                     // 3. Проверяем, существует ли пользователь
                     log(`3️⃣ Проверяем сохранность пользователя...`);
-                    const loginResponse = await fetch(`${API_BASE_URL}/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: testEmail, password: testPassword })
+                    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                        email: testEmail,
+                        password: testPassword
                     });
                     
-                    if (loginResponse.ok) {
+                    if (!loginError && loginData.user) {
                         log(`✅ Пользователь найден - база данных стабильна`);
                         showResult(`
-                            <h4>✅ База данных работает стабильно</h4>
+                            <h4>✅ База данных Supabase работает стабильно</h4>
                             <p>Тестовый пользователь успешно сохранился и найден</p>
                             <p>Проблемы входа НЕ связаны с пересозданием базы</p>
                         `, 'success');
@@ -184,11 +187,11 @@
                         showResult(`
                             <h4>⚠️ ПРОБЛЕМА: База данных нестабильна</h4>
                             <p>Созданный пользователь исчез за 5 секунд!</p>
-                            <p><strong>Причина проблем входа:</strong> Render.com пересоздает базу данных</p>
+                            <p><strong>Причина проблем входа:</strong> Возможна проблема с Supabase</p>
                         `, 'error');
                     }
                 } else {
-                    log(`❌ Не удалось создать тестового пользователя`);
+                    log(`❌ Не удалось создать тестового пользователя: ${regError?.message}`);
                 }
                 
             } catch (error) {
@@ -198,7 +201,7 @@
         }
 
         async function monitorResponseTimes() {
-            log('⏱️ Начинаем мониторинг времени ответа...');
+            log('⏱️ Начинаем мониторинг времени ответа Supabase...');
             showResult(`
                 <h4>⏱️ Мониторинг запущен</h4>
                 <p>Выполняется 10 запросов с интервалом 2 секунды...</p>
@@ -209,7 +212,8 @@
             for (let i = 1; i <= 10; i++) {
                 try {
                     const start = Date.now();
-                    const response = await fetch(`${API_BASE_URL}/health`);
+                    // Проверяем подключение к Supabase
+                    const { data, error } = await supabase.from('user_profiles').select('count').limit(1);
                     const time = Date.now() - start;
                     times.push(time);
                     
@@ -235,14 +239,14 @@
                     <h4>⚠️ ОБНАРУЖЕНА ПРОБЛЕМА: Нестабильное время ответа</h4>
                     <p><strong>Максимальное время:</strong> ${maxTime}ms (${(maxTime/1000).toFixed(1)}с)</p>
                     <p><strong>Среднее время:</strong> ${avgTime.toFixed(0)}ms</p>
-                    <p>🔍 <strong>Диагноз:</strong> Сервер периодически "засыпает"</p>
-                    <p>💡 <strong>Рекомендация:</strong> Переход на платный план Render.com</p>
+                    <p>🔍 <strong>Диагноз:</strong> Supabase периодически медленно отвечает</p>
+                    <p>💡 <strong>Рекомендация:</strong> Проверить интернет соединение</p>
                 `, 'warning');
             } else {
                 showResult(`
                     <h4>✅ Время ответа стабильное</h4>
                     <p>Среднее время: ${avgTime.toFixed(0)}ms</p>
-                    <p>Сервер работает без проблем</p>
+                    <p>Supabase работает без проблем</p>
                 `, 'success');
             }
         }

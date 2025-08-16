@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upwork Proposal Generator - Генератор предложений</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
+    </script>
+    
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>🚀 Upwork Proposal Generator</h1>
+                <p>Создавайте убедительные предложения с помощью AI</p>
+            </div>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span id="userEmail"></span>
+                <a href="subscription_manager.html" class="btn-secondary">⚙️ Управление подпиской</a>
+                <a href="yandex_gpt_setup.html" class="btn-secondary">�� Настройка API</a>
+                <button onclick="handleLogout()" class="btn-secondary">Выйти</button>
+            </div>
+        </header>
+
+        <!-- Auth Forms -->
+        <div id="authForms" class="auth-section">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <button class="tab-btn active" onclick="showTab('login')">Вход</button>
+                    <button class="tab-btn" onclick="showTab('register')">Регистрация</button>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="quick-links">
+                    <a href="subscription_manager.html" class="quick-link">💰 Тарифы и подписки</a>
+                    <a href="yandex_gpt_setup.html" class="quick-link">🤖 Настройка Yandex GPT</a>
+                </div>
+                
+                <!-- GitHub Login Button -->
+                <div class="github-login">
+                    <button onclick="handleGitHubLogin()" class="github-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        Войти через GitHub
+                    </button>
+                    <div class="divider">или</div>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form">
+                    <h2>Вход в систему</h2>
+                    <form onsubmit="handleLogin(event)">
+                        <div class="form-group">
+                            <label for="loginEmail">Email:</label>
+                            <input type="email" id="loginEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Пароль:</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Войти</button>
+                    </form>
+                </div>
+                
+                <!-- Register Form -->
+                <div id="registerForm" class="auth-form" style="display: none;">
+                    <h2>Регистрация</h2>
+                    <form onsubmit="handleRegister(event)">
+                        <div class="form-group">
+                            <label for="registerEmail">Email:</label>
+                            <input type="email" id="registerEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Пароль:</label>
+                            <input type="password" id="registerPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Подтвердите пароль:</label>
+                            <input type="password" id="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Зарегистрироваться</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="main-app" style="display: none;">
+            <!-- Subscription Status -->
+            <div class="subscription-status" id="subscriptionStatus">
+                <div class="subscription-info">
+                    <h3>��🇺 Ваша подписка</h3>
+                    <div class="subscription-details">
+                        <span id="subscriptionType">Бесплатная (Демо)</span>
+                        <span id="aiProvider">AI: Демо-режим</span>
+                        <span id="dailyRemaining">Осталось: 3 предложения</span>
+                    </div>
+                    <div id="subscriptionInfo"></div>
+                </div>
+                <div class="subscription-actions">
+                    <button onclick="openSubscriptionManager()" class="btn-upgrade" id="upgradeBtn">
+                        �� Yandex GPT Premium
+                    </button>
+                    <button onclick="setupYandexGPTAPI()" class="btn-secondary" id="setupBtn" style="display: none;">
+                        ⚙️ Настроить API
+                    </button>
+                </div>
+            </div>
+
+            <!-- Proposal Generator -->
+            <div class="generator-section">
+                <h2>Генератор предложений</h2>
+                <form id="proposalForm" onsubmit="generateProposal(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectTitle">Название проекта:</label>
+                            <input type="text" id="projectTitle" required placeholder="Например: Website Development">
+                        </div>
+                        <div class="form-group">
+                            <label for="projectBudget">Бюджет:</label>
+                            <input type="text" id="projectBudget" required placeholder="Например: $1000-2000">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="projectDescription">Описание проекта:</label>
+                        <textarea id="projectDescription" required placeholder="Опишите проект подробно..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="specialization">Специализация:</label>
+                            <select id="specialization" required>
+                                <option value="">Выберите специализацию</option>
+                                <option value="Web Development">Веб-разработка</option>
+                                <option value="Mobile Development">Мобильная разработка</option>
+                                <option value="Graphic Design">Графический дизайн</option>
+                                <option value="Content Writing">Написание контента</option>
+                                <option value="Digital Marketing">Цифровой маркетинг</option>
+                                <option value="Data Entry">Ввод данных</option>
+                                <option value="Translation">Перевод</option>
+                                <option value="Virtual Assistant">Виртуальный помощник</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tone">Тон предложения:</label>
+                            <select id="tone" required>
+                                <option value="Professional">Профессиональный</option>
+                                <option value="Friendly">Дружелюбный</option>
+                                <option value="Formal">Формальный</option>
+                                <option value="Creative">Креативный</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-generate">Сгенерировать предложение</button>
+                </form>
+            </div>
+
+            <!-- Generated Proposal -->
+            <div id="proposalResult" class="proposal-result" style="display: none;">
+                <h3>Сгенерированное предложение:</h3>
+                <div class="proposal-content" id="proposalContent"></div>
+                <div class="proposal-actions">
+                    <button onclick="copyProposal()" class="btn-secondary">Копировать</button>
+                    <button onclick="saveProposal()" class="btn-secondary">Сохранить</button>
+                    <button onclick="generateNew()" class="btn-primary">Сгенерировать новое</button>
+                </div>
+            </div>
+
+            <!-- Proposals History -->
+            <div class="history-section">
+                <h3>История предложений</h3>
+                <div id="proposalsHistory" class="proposals-list">
+                    <!-- История будет загружаться здесь -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Upgrade Modal -->
+        <div id="upgradeModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeUpgradeModal()">&times;</span>
+                <h2>Обновите до Premium</h2>
+                
+                <div class="pricing-cards">
+                    <div class="pricing-card">
+                        <h3>Бесплатная версия</h3>
+                        <div class="price">0 ₽</div>
+                        <ul>
+                            <li>3 предложения в день</li>
+                            <li>Базовые шаблоны</li>
+                            <li>Демо AI</li>
+                            <li>Сообщество поддержка</li>
+                        </ul>
+                        <button class="btn-secondary" disabled>Текущий план</button>
+                    </div>
+                    
+                    <div class="pricing-card premium">
+                        <h3>Premium</h3>
+                        <div class="price">1 500 ₽<span>/мес</span></div>
+                        <ul>
+                            <li>Неограниченные предложения</li>
+                            <li>Расширенные шаблоны</li>
+                            <li>Продвинутый AI (Yandex GPT)</li>
+                            <li>Приоритетная поддержка</li>
+                            <li>Экспорт предложений</li>
+                        </ul>
+                        <button onclick="openSubscriptionManager()" class="btn-primary">Выбрать Premium</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Генерируем предложение...</p>
+        </div>
+        
+        <!-- Footer with Legal Links -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Юридическая информация</h4>
+                    <div class="footer-links">
+                        <a href="terms.html">📋 Пользовательское соглашение</a>
+                        <a href="privacy.html">🔒 Политика конфиденциальности</a>
+                        <a href="legal.html">🏢 Реквизиты и юридическая информация</a>
+                        <a href="refund.html">�� Политика возвратов</a>
+                        <a href="delivery-info.html">📦 Способ получения услуги</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>Поддержка</h4>
+                    <div class="footer-links">
+                        <a href="mailto:s.proposalgenerator@mail.ru">📧 Поддержка</a>
+                        <a href="mailto:businessupworkproposalgenerator@mail.ru">💼 Бизнес-вопросы</a>
+                        <a href="mailto:privatupworkproposalgenerator@mail.ru">�� Конфиденциальность</a>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <h4>О сервисе</h4>
+                    <p>Upwork Proposal Generator - веб-приложение для автоматизации создания предложений на фриланс-платформе Upwork с использованием технологий искусственного интеллекта.</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Upwork Proposal Generator. Все права защищены.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notifications"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>

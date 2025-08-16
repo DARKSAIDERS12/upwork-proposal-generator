@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Базовый тест</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        input { padding: 8px; margin: 5px; width: 200px; border: 1px solid #ddd; border-radius: 3px; }
+        .form-group { margin: 10px 0; }
+        h1 { color: #333; text-align: center; }
+        h3 { color: #555; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Базовый тест функциональности</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Информация</h3>
+            <p>Эта страница тестирует только базовые функции без сложной логики.</p>
+            <p><strong>URL:</strong> <span id="currentUrl"></span></p>
+            <p><strong>Время загрузки:</strong> <span id="loadTime"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 Тест загрузки страницы</h3>
+            <button onclick="testPageLoad()">Тест загрузки</button>
+            <div id="pageLoadResult" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 Тест ссылок</h3>
+            <button onclick="testLinks()">Проверить ссылки</button>
+            <div id="linksResult" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Тест форм</h3>
+            <button onclick="testForms()">Проверить формы</button>
+            <div id="formsResult" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎨 Тест стилей</h3>
+            <button onclick="testStyles()">Проверить стили</button>
+            <div id="stylesResult" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Статистика</h3>
+            <button onclick="showStats()">Показать статистику</button>
+            <div id="statsResult" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        const startTime = Date.now();
+        
+        // Показываем текущий URL и время загрузки
+        document.getElementById('currentUrl').textContent = window.location.href;
+        document.getElementById('loadTime').textContent = new Date().toLocaleTimeString();
+
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function testPageLoad() {
+            const logElement = document.getElementById('pageLoadResult');
+            logElement.textContent = '';
+            
+            log(logElement, '🔄 Тестируем загрузку страницы...');
+            
+            // Проверяем основные элементы
+            const elements = ['container', 'currentUrl', 'loadTime'];
+            let allElementsExist = true;
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    log(logElement, `✅ Элемент ${id} найден`);
+                } else {
+                    log(logElement, `❌ Элемент ${id} не найден`);
+                    allElementsExist = false;
+                }
+            });
+            
+            // Проверяем время загрузки
+            const loadTime = Date.now() - startTime;
+            log(logElement, `⏱️ Время загрузки: ${loadTime}ms`);
+            
+            if (allElementsExist) {
+                log(logElement, '✅ Все основные элементы загружены');
+            } else {
+                log(logElement, '❌ Некоторые элементы не загружены');
+            }
+        }
+
+        function testLinks() {
+            const logElement = document.getElementById('linksResult');
+            logElement.textContent = '';
+            
+            log(logElement, '🔄 Проверяем ссылки...');
+            
+            const links = document.querySelectorAll('a');
+            log(logElement, `🔗 Найдено ссылок: ${links.length}`);
+            
+            if (links.length === 0) {
+                log(logElement, 'ℹ️ Ссылок на странице нет');
+            } else {
+                links.forEach((link, index) => {
+                    log(logElement, `🔗 Ссылка ${index + 1}: ${link.href || 'без href'}`);
+                });
+            }
+        }
+
+        function testForms() {
+            const logElement = document.getElementById('formsResult');
+            logElement.textContent = '';
+            
+            log(logElement, '🔄 Проверяем формы...');
+            
+            const forms = document.querySelectorAll('form');
+            log(logElement, `📝 Найдено форм: ${forms.length}`);
+            
+            if (forms.length === 0) {
+                log(logElement, 'ℹ️ Форм на странице нет');
+            } else {
+                forms.forEach((form, index) => {
+                    log(logElement, `📝 Форма ${index + 1}: ${form.id || 'без id'}`);
+                    const inputs = form.querySelectorAll('input, select, textarea');
+                    log(logElement, `  📥 Поля ввода: ${inputs.length}`);
+                });
+            }
+        }
+
+        function testStyles() {
+            const logElement = document.getElementById('stylesResult');
+            logElement.textContent = '';
+            
+            log(logElement, '🔄 Проверяем стили...');
+            
+            // Проверяем основные стили
+            const container = document.querySelector('.container');
+            if (container) {
+                const styles = window.getComputedStyle(container);
+                log(logElement, `🎨 Контейнер: max-width=${styles.maxWidth}, background=${styles.backgroundColor}`);
+            }
+            
+            // Проверяем кнопки
+            const buttons = document.querySelectorAll('button');
+            log(logElement, `🔘 Найдено кнопок: ${buttons.length}`);
+            
+            if (buttons.length > 0) {
+                const buttonStyles = window.getComputedStyle(buttons[0]);
+                log(logElement, `🎨 Стиль кнопки: background=${buttonStyles.backgroundColor}, color=${buttonStyles.color}`);
+            }
+        }
+
+        function showStats() {
+            const logElement = document.getElementById('statsResult');
+            logElement.textContent = '';
+            
+            log(logElement, '📊 Статистика страницы:');
+            
+            const elements = document.querySelectorAll('*');
+            log(logElement, `🏷️ Всего элементов: ${elements.length}`);
+            
+            const divs = document.querySelectorAll('div');
+            log(logElement, `📦 Div элементов: ${divs.length}`);
+            
+            const buttons = document.querySelectorAll('button');
+            log(logElement, `🔘 Кнопок: ${buttons.length}`);
+            
+            const inputs = document.querySelectorAll('input');
+            log(logElement, `📥 Полей ввода: ${inputs.length}`);
+            
+            const scripts = document.querySelectorAll('script');
+            log(logElement, `📜 Скриптов: ${scripts.length}`);
+            
+            const styles = document.querySelectorAll('style');
+            log(logElement, `🎨 Стилей: ${styles.length}`);
+            
+            log(logElement, `⏱️ Время загрузки: ${Date.now() - startTime}ms`);
+        }
+
+        // Автоматический тест при загрузке
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testPageLoad();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
