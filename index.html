@@ -506,28 +506,6 @@
         };
         
         // Функция входа через GitHub - определяем сразу
-        window.handleGitHubLogin = async function() {
-            try {
-                console.log('🔄 Попытка входа через GitHub...');
-                
-                // Проверяем, что auth.js загружен
-                if (typeof signInWithGitHub === 'undefined') {
-                    showNotification('⏳ Система аутентификации еще не загружена. Подождите немного и попробуйте снова.', 'info');
-                    return;
-                }
-                
-                showNotification('🔄 Входим через GitHub...', 'info');
-                await signInWithGitHub();
-                
-            } catch (error) {
-                console.error('❌ Ошибка GitHub входа:', error);
-                showNotification(`❌ Ошибка входа через GitHub: ${error.message}`, 'error');
-            }
-        };
-        
-        // Функция регистрации - определяем сразу
-        window.handleRegister = async function(event) {
-            event.preventDefault();
             console.log('🔄 Попытка регистрации...');
             
             try {
@@ -549,57 +527,6 @@
                 showNotification('🔄 Регистрируем...', 'info');
                 const user = await registerUser(email, password, email);
                 showNotification('✅ Регистрация успешна!', 'success');
-                
-                // Переключаемся на вкладку входа
-                console.log('🔄 Переключаемся на вкладку входа...');
-                showTab('login');
-                
-            } catch (error) {
-                console.error('❌ Ошибка регистрации:', error);
-                showNotification(`❌ Ошибка регистрации: ${error.message}`, 'error');
-            }
-        };
-        
-        // Функция входа - определяем сразу
-        window.handleLogin = async function(event) {
-            event.preventDefault();
-            console.log('🔄 Попытка входа...');
-            
-            try {
-                const email = document.getElementById('loginEmail').value;
-                const password = document.getElementById('loginPassword').value;
-                
-                // Проверяем, что auth.js загружен
-                if (typeof loginUser === 'undefined') {
-                    showNotification('⏳ Система аутентификации еще не загружена. Подождите немного и попробуйте снова.', 'info');
-                    return;
-                }
-                
-                showNotification('🔄 Входим...', 'info');
-                const user = await loginUser(email, password);
-                showNotification('✅ Вход выполнен!', 'success');
-                
-                // Сохраняем пользователя и показываем основной контент
-                currentUser = user;
-                isAuthenticated = true;
-                console.log('👤 Пользователь сохранен:', currentUser);
-                console.log('🔐 isAuthenticated:', isAuthenticated);
-                
-                // Показываем основной контент
-                showMainContent();
-                
-            } catch (error) {
-                console.error('❌ Ошибка входа:', error);
-                showNotification(`❌ Ошибка входа: ${error.message}`, 'error');
-            }
-        };
-        
-        // Функции для работы с подписками
-        function openSubscriptionManager() {
-            // Проверяем, авторизован ли пользователь
-            if (!currentUser || !isAuthenticated) {
-                console.log('⚠️ Попытка открыть подписку без авторизации');
-                showNotification('⚠️ Сначала войдите в систему', 'warning');
                 return;
             }
             
@@ -788,7 +715,6 @@
                     if (typeof window.supabase !== "undefined") {
                         clearInterval(checkInterval);
                         console.log(`✅ Supabase SDK загружен после ${attempts} попыток`);
-                        resolve();
                         resolve();
                     } else if (attempts >= maxAttempts) {
                         clearInterval(checkInterval);
