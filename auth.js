@@ -60,6 +60,8 @@ async function signInWithGitHub() {
   }
   
   try {
+    console.log('🔄 Начинаем GitHub вход...');
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
@@ -67,16 +69,27 @@ async function signInWithGitHub() {
       }
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Ошибка GitHub входа:', error);
+      throw error;
+    }
+    
+    console.log('✅ GitHub OAuth инициирован:', data);
     
     // Если пользователь успешно вошел, сохраняем профиль
     if (data.user) {
-      await saveUserProfile(data.user, "github");
+      try {
+        await saveUserProfile(data.user, "github");
+        console.log('✅ Профиль GitHub пользователя сохранен');
+      } catch (profileError) {
+        console.error('⚠️ Ошибка сохранения профиля GitHub, но вход прошел:', profileError);
+        // Не прерываем вход, если профиль не сохранился
+      }
     }
     
     return data.user;
   } catch (error) {
-    console.error("Ошибка GitHub входа:", error);
+    console.error("❌ Ошибка GitHub входа:", error);
     throw error;
   }
 }
@@ -90,6 +103,8 @@ async function registerUser(email, password, fullName) {
   }
   
   try {
+    console.log('🆕 Начинаем регистрацию пользователя:', email);
+    
     const { data, error } = await supabase.auth.signUp({
       email: email,
       password: password,
@@ -100,16 +115,27 @@ async function registerUser(email, password, fullName) {
       }
     });
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Ошибка регистрации:', error);
+      throw error;
+    }
+    
+    console.log('✅ Регистрация успешна:', data.user);
     
     // Если регистрация успешна, сохраняем профиль
     if (data.user) {
-      await saveUserProfile(data.user, "email");
+      try {
+        await saveUserProfile(data.user, "email");
+        console.log('✅ Профиль пользователя сохранен');
+      } catch (profileError) {
+        console.error('⚠️ Ошибка сохранения профиля, но регистрация прошла:', profileError);
+        // Не прерываем регистрацию, если профиль не сохранился
+      }
     }
     
     return data.user;
   } catch (error) {
-    console.error("Ошибка регистрации:", error);
+    console.error("❌ Ошибка регистрации:", error);
     throw error;
   }
 }
@@ -123,6 +149,8 @@ async function loginUser(email, password) {
   }
   
   try {
+    console.log('🔄 Начинаем вход пользователя:', email);
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
       password: password
@@ -140,9 +168,21 @@ async function loginUser(email, password) {
     }
     
     console.log('✅ Вход выполнен успешно:', data.user);
+    
+    // При успешном входе обновляем профиль
+    if (data.user) {
+      try {
+        await saveUserProfile(data.user, "email");
+        console.log('✅ Профиль пользователя обновлен при входе');
+      } catch (profileError) {
+        console.error('⚠️ Ошибка обновления профиля при входе, но вход прошел:', profileError);
+        // Не прерываем вход, если профиль не обновился
+      }
+    }
+    
     return data.user;
   } catch (error) {
-    console.error("Ошибка входа:", error);
+    console.error("❌ Ошибка входа:", error);
     throw error;
   }
 }
@@ -167,10 +207,64 @@ async function logoutUser() {
   }
 }
 
-// Сохранение профиля пользователя в Supabase (временно отключено)
+// Сохранение профиля пользователя в Supabase
 async function saveUserProfile(user, provider) {
-  console.warn('⚠️ Функция saveUserProfile временно отключена - проблемы с БД');
-  return true; // Возвращаем true для совместимости
+  if (!isInitialized) {
+    if (!initSupabase()) {
+      throw new Error('Supabase не инициализирован');
+    }
+  }
+  
+  try {
+    console.log('💾 Сохранение профиля пользователя:', user.email);
+    
+    // Проверяем, существует ли уже профиль
+    const { data: existingProfile } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .eq("id", user.id)
+      .single();
+    
+    if (existingProfile) {
+      console.log('✅ Профиль уже существует, обновляем...');
+      // Обновляем существующий профиль
+      const { error } = await supabase
+        .from("user_profiles")
+        .update({
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email,
+          avatar_url: user.user_metadata?.avatar_url || null,
+          provider: provider,
+          updated_at: new Date()
+        })
+        .eq("id", user.id);
+      
+      if (error) throw error;
+      console.log('✅ Профиль обновлен');
+    } else {
+      console.log('🆕 Создаем новый профиль...');
+      // Создаем новый профиль
+      const { error } = await supabase
+        .from("user_profiles")
+        .insert({
+          id: user.id,
+          email: user.email,
+          full_name: user.user_metadata?.full_name || user.email,
+          avatar_url: user.user_metadata?.avatar_url || null,
+          provider: provider,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+      
+      if (error) throw error;
+      console.log('✅ Новый профиль создан');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('❌ Ошибка сохранения профиля:', error);
+    throw error;
+  }
 }
 
 // Слушатель состояния аутентификации (удален дубликат)
@@ -290,18 +384,38 @@ function onAuthStateChange(callback) {
         // Получаем текущего пользователя
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
+                console.log('🔄 Обнаружена активная сессия:', session.user.email);
                 callback(session.user);
             } else {
+                console.log('🔓 Активная сессия не найдена');
                 callback(null);
             }
         });
         
         // Слушаем изменения аутентификации
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            console.log('🔄 Событие аутентификации:', event);
+            
             if (event === 'SIGNED_IN' && session) {
+                console.log('✅ Пользователь вошел в систему:', session.user.email);
+                
+                // Автоматически сохраняем/обновляем профиль
+                try {
+                    const provider = session.user.app_metadata?.provider || 'email';
+                    await saveUserProfile(session.user, provider);
+                    console.log('✅ Профиль автоматически сохранен при входе');
+                } catch (profileError) {
+                    console.error('⚠️ Ошибка автоматического сохранения профиля:', profileError);
+                    // Не прерываем процесс входа
+                }
+                
                 callback(session.user);
             } else if (event === 'SIGNED_OUT') {
+                console.log('🔓 Пользователь вышел из системы');
                 callback(null);
+            } else if (event === 'TOKEN_REFRESHED' && session) {
+                console.log('🔄 Токен обновлен для пользователя:', session.user.email);
+                callback(session.user);
             }
         });
         
