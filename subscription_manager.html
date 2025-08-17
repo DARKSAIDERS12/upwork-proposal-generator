@@ -33,7 +33,7 @@
         </div>
 
         <!-- Pricing Cards -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <!-- Free Plan -->
             <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200">
                 <div class="text-center">
@@ -64,14 +64,51 @@
                 </button>
             </div>
 
-            <!-- Premium Plan -->
+            <!-- Pro Plan -->
             <div class="bg-white rounded-2xl shadow-xl p-8 border-2 border-blue-500 transform scale-105">
                 <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">Популярный</span>
                 </div>
                 <div class="text-center">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Premium</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Pro</h3>
                     <div class="text-4xl font-bold text-blue-600 mb-2">1 500 ₽</div>
+                    <div class="text-gray-600 mb-8">в месяц</div>
+                </div>
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        50 предложений в день
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Расширенные шаблоны
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Базовый AI (Yandex GPT)
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Email поддержка
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Экспорт предложений
+                    </li>
+                </ul>
+                <button id="selectProBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-200">
+                    Выбрать Pro
+                </button>
+            </div>
+
+            <!-- Premium Plan -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 border-2 border-purple-500">
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span class="bg-purple-600 text-white px-4 py-2 rounded-full text-sm font-semibold">Премиум</span>
+                </div>
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Premium</h3>
+                    <div class="text-4xl font-bold text-purple-600 mb-2">3 000 ₽</div>
                     <div class="text-gray-600 mb-8">в месяц</div>
                 </div>
                 <ul class="space-y-4 mb-8">
@@ -81,37 +118,23 @@
                     </li>
                     <li class="flex items-center">
                         <span class="text-green-500 mr-3">✓</span>
-                        Расширенные шаблоны
+                        Все шаблоны (включая эксклюзивные)
                     </li>
                     <li class="flex items-center">
                         <span class="text-green-500 mr-3">✓</span>
-                        Продвинутый AI (Yandex GPT)
+                        Продвинутый AI (Yandex GPT + GigaChat)
                     </li>
                     <li class="flex items-center">
                         <span class="text-green-500 mr-3">✓</span>
-                        Приоритетная поддержка
+                        Приоритетная поддержка 24/7
                     </li>
                     <li class="flex items-center">
                         <span class="text-green-500 mr-3">✓</span>
-                        Экспорт предложений
+                        Расширенный экспорт (PDF, Word, Excel)
                     </li>
-                </ul>
-                <button id="selectPremiumBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-200">
-                    Выбрать Premium
-                </button>
-            </div>
-
-            <!-- Enterprise Plan -->
-            <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-purple-200">
-                <div class="text-center">
-                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Enterprise</h3>
-                    <div class="text-4xl font-bold text-gray-900 mb-2">5 000 ₽</div>
-                    <div class="text-gray-600 mb-8">в месяц</div>
-                </div>
-                <ul class="space-y-4 mb-8">
                     <li class="flex items-center">
                         <span class="text-green-500 mr-3">✓</span>
-                        Все возможности Premium
+                        Аналитика и статистика
                     </li>
                     <li class="flex items-center">
                         <span class="text-green-500 mr-3">✓</span>
@@ -119,15 +142,11 @@
                     </li>
                     <li class="flex items-center">
                         <span class="text-green-500 mr-3">✓</span>
-                        Белый лейбл
-                    </li>
-                    <li class="flex items-center">
-                        <span class="text-green-500 mr-3">✓</span>
                         Персональный менеджер
                     </li>
                 </ul>
-                <button class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-200">
-                    Связаться с нами
+                <button id="selectPremiumBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-200">
+                    Выбрать Premium
                 </button>
             </div>
         </div>
@@ -218,6 +237,17 @@
             }, 2000);
         }
 
+        // Обработчик выбора Pro
+        function handleProSelection() {
+            console.log('🔄 Пользователь выбрал Pro план');
+            showNotification('🚀 Спасибо за выбор Pro! Мы свяжемся с вами для оформления подписки.', 'success');
+            
+            // Здесь можно добавить логику для перехода к оплате
+            setTimeout(() => {
+                showNotification('📧 Отправьте запрос на s.proposalgenerator@mail.ru для оформления подписки', 'info');
+            }, 2000);
+        }
+
         // Простая система уведомлений
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
@@ -252,6 +282,11 @@
             const selectPremiumBtn = document.getElementById('selectPremiumBtn');
             if (selectPremiumBtn) {
                 selectPremiumBtn.addEventListener('click', handlePremiumSelection);
+            }
+
+            const selectProBtn = document.getElementById('selectProBtn');
+            if (selectProBtn) {
+                selectProBtn.addEventListener('click', handleProSelection);
             }
             
             console.log('✅ Все обработчики событий настроены');

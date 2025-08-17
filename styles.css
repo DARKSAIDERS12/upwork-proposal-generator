@@ -476,54 +476,90 @@ body {
 /* Pricing Cards */
 .pricing-cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
 }
 
 .pricing-card {
-    background: #f7fafc;
+    background: #f8fafc;
     border-radius: 12px;
-    padding: 30px;
+    padding: 20px;
     text-align: center;
     border: 2px solid #e2e8f0;
     transition: all 0.3s ease;
 }
 
+.pricing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
 .pricing-card.premium {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-color: #667eea;
-    transform: scale(1.05);
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
 }
 
 .pricing-card h3 {
-    margin-bottom: 20px;
+    color: #1e293b;
     font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 15px;
 }
 
-.price {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 20px;
+.pricing-card .price {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #3b82f6;
+    margin-bottom: 15px;
 }
 
-.price span {
+.pricing-card .price span {
     font-size: 1rem;
-    opacity: 0.8;
+    color: #64748b;
 }
 
 .pricing-card ul {
     list-style: none;
-    margin-bottom: 30px;
+    padding: 0;
+    margin: 20px 0;
 }
 
 .pricing-card li {
     padding: 8px 0;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
 }
 
-.pricing-card.premium li {
-    border-bottom-color: rgba(255, 255, 255, 0.2);
+.pricing-card li:last-child {
+    border-bottom: none;
+}
+
+.pricing-card .btn-primary,
+.pricing-card .btn-secondary {
+    width: 100%;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pricing-card .btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.pricing-card .btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+}
+
+.pricing-card .btn-secondary {
+    background: #9ca3af;
+    color: #6b7280;
+    cursor: not-allowed;
 }
 
 /* Loading */
