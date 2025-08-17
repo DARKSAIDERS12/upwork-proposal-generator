@@ -1358,18 +1358,44 @@ ${description}
                 
                 console.log('✅ Регистрация успешна:', data.user);
                 
-                // Если регистрация успешна, ждем немного и сохраняем профиль
+                // Если регистрация успешна, автоматически входим в систему
                 if (data.user) {
                     try {
-                        // Ждем немного для инициализации сессии
-                        console.log('⏳ Ждем инициализации сессии...');
-                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        console.log('🔄 Автоматически входим в систему после регистрации...');
                         
-                        // Пытаемся сохранить профиль
-                        await saveUserProfile(data.user, "email");
-                        console.log('✅ Профиль пользователя сохранен');
+                        // Автоматически входим с теми же данными
+                        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+                            email: email,
+                            password: password
+                        });
+                        
+                        if (loginError) {
+                            console.error('❌ Ошибка автоматического входа:', loginError);
+                            throw loginError;
+                        }
+                        
+                        console.log('✅ Автоматический вход выполнен успешно:', loginData.user);
+                        
+                        // Теперь у нас есть активная сессия, создаем профиль
+                        console.log('💾 Создаем профиль с активной сессией...');
+                        await saveUserProfile(loginData.user, "email");
+                        console.log('✅ Профиль пользователя создан');
+                        
+                        // Обновляем глобальные переменные
+                        currentUser = loginData.user;
+                        isAuthenticated = true;
+                        
+                        // Показываем основной контент
+                        showMainContent();
+                        
+                        // Обновляем отображение лимитов
+                        updateDailyRemainingDisplay();
+                        resetDailyLimits();
+                        
+                        return loginData.user;
+                        
                     } catch (profileError) {
-                        console.error('⚠️ Ошибка сохранения профиля, но регистрация прошла:', profileError);
+                        console.error('⚠️ Ошибка создания профиля, но регистрация прошла:', profileError);
                         console.log('💡 Профиль может быть создан автоматически через триггеры Supabase');
                         
                         // Проверяем, создался ли профиль через триггеры
@@ -1381,6 +1407,8 @@ ${description}
                         } catch (checkError) {
                             console.error('❌ Ошибка проверки создания профиля:', checkError);
                         }
+                        
+                        return data.user;
                     }
                 }
                 
@@ -1483,6 +1511,8 @@ ${description}
                 }
                 
                 console.log('🔑 Используем токен сессии для создания профиля');
+                console.log('👤 ID пользователя:', user.id);
+                console.log('📧 Email:', user.email);
                 
                 // Проверяем, существует ли уже профиль
                 const { data: existingProfile, error: selectError } = await supabase
@@ -1524,18 +1554,23 @@ ${description}
                     console.log('✅ Профиль обновлен');
                 } else {
                     console.log('🆕 Создаем новый профиль...');
+                    
+                    const profileData = {
+                        id: user.id,
+                        email: user.email,
+                        full_name: user.user_metadata?.full_name || user.email,
+                        avatar_url: user.user_metadata?.avatar_url || null,
+                        provider: provider,
+                        created_at: new Date(),
+                        updated_at: new Date()
+                    };
+                    
+                    console.log('📝 Данные профиля для создания:', profileData);
+                    
                     // Создаем новый профиль
                     const { error } = await supabase
                         .from("user_profiles")
-                        .insert({
-                            id: user.id,
-                            email: user.email,
-                            full_name: user.user_metadata?.full_name || user.email,
-                            avatar_url: user.user_metadata?.avatar_url || null,
-                            provider: provider,
-                            created_at: new Date(),
-                            updated_at: new Date()
-                        });
+                        .insert(profileData);
                     
                     if (error) {
                         console.error('❌ Ошибка создания профиля:', error);
