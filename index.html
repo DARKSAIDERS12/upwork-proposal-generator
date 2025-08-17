@@ -97,7 +97,7 @@
             <!-- Subscription Status -->
             <div class="subscription-status" id="subscriptionStatus">
                 <div class="subscription-info">
-                    <h3>��🇺 Ваша подписка</h3>
+                    <h3>🇺🇸 Ваша подписка</h3>
                     <div class="subscription-details">
                         <span id="subscriptionType">Бесплатная (Демо)</span>
                         <span id="aiProvider">AI: Демо-режим</span>
@@ -106,11 +106,12 @@
                     <div id="subscriptionInfo"></div>
                 </div>
                 <div class="subscription-actions">
-                    <button onclick="openSubscriptionManager()" class="btn-upgrade" id="upgradeBtn">
-                        �� Yandex GPT Premium
+                    <button class="btn-upgrade" id="upgradeBtn">
+                        🚀 Обновить до Premium
                     </button>
-                    <button onclick="setupYandexGPTAPI()" class="btn-secondary" id="setupBtn" style="display: none;">
-                        ⚙️ Настроить API
+                    
+                    <button class="btn-secondary" id="setupBtn" style="display: none;">
+                        ⚙️ Настройка API
                     </button>
                 </div>
             </div>
@@ -170,9 +171,9 @@
                 <h3>Сгенерированное предложение:</h3>
                 <div class="proposal-content" id="proposalContent"></div>
                 <div class="proposal-actions">
-                    <button onclick="copyProposal()" class="btn-secondary">Копировать</button>
-                    <button onclick="saveProposal()" class="btn-secondary">Сохранить</button>
-                    <button onclick="generateNew()" class="btn-primary">Сгенерировать новое</button>
+                    <button class="btn-secondary" id="copyBtn">Копировать</button>
+                    <button class="btn-secondary" id="saveBtn">Сохранить</button>
+                    <button class="btn-primary" id="generateNewBtn">Сгенерировать новое</button>
                 </div>
             </div>
 
@@ -188,7 +189,7 @@
         <!-- Upgrade Modal -->
         <div id="upgradeModal" class="modal" style="display: none;">
             <div class="modal-content">
-                <span class="close" onclick="closeUpgradeModal()">&times;</span>
+                <span class="close" id="closeModalBtn">&times;</span>
                 <h2>Обновите до Premium</h2>
                 
                 <div class="pricing-cards">
@@ -235,7 +236,7 @@
                         <a href="terms.html">📋 Пользовательское соглашение</a>
                         <a href="privacy.html">🔒 Политика конфиденциальности</a>
                         <a href="legal.html">🏢 Реквизиты и юридическая информация</a>
-                        <a href="refund.html">�� Политика возвратов</a>
+                        <a href="refund.html">💸 Политика возвратов</a>
                         <a href="delivery-info.html">📦 Способ получения услуги</a>
                     </div>
                 </div>
@@ -244,7 +245,7 @@
                     <div class="footer-links">
                         <a href="mailto:s.proposalgenerator@mail.ru">📧 Поддержка</a>
                         <a href="mailto:businessupworkproposalgenerator@mail.ru">💼 Бизнес-вопросы</a>
-                        <a href="mailto:privatupworkproposalgenerator@mail.ru">�� Конфиденциальность</a>
+                        <a href="mailto:privatupworkproposalgenerator@mail.ru">🔒 Конфиденциальность</a>
                     </div>
                 </div>
                 <div class="footer-section">
@@ -636,8 +637,8 @@
         function upgradeToPremium() {
             console.log('🔄 Попытка обновления до Premium...');
             // Логика обновления до Premium
-            showNotification('💎 Функция обновления в разработке', 'info');
             closeUpgradeModal();
+            window.location.href = 'subscription_manager.html';
         }
         
         // Функция GitHub входа - определяем сразу
@@ -924,6 +925,46 @@
             if (loginForm) loginForm.style.display = 'block';
         }
         
+        // Функция копирования предложения
+        function copyProposal() {
+            const proposalContent = document.getElementById('proposalContent');
+            if (proposalContent && proposalContent.textContent) {
+                navigator.clipboard.writeText(proposalContent.textContent).then(() => {
+                    showNotification('✅ Предложение скопировано в буфер обмена', 'success');
+                }).catch(() => {
+                    showNotification('❌ Ошибка копирования', 'error');
+                });
+            } else {
+                showNotification('⚠️ Нет предложения для копирования', 'warning');
+            }
+        }
+        
+        // Функция сохранения предложения
+        function saveProposal() {
+            const proposalContent = document.getElementById('proposalContent');
+            if (proposalContent && proposalContent.textContent) {
+                const blob = new Blob([proposalContent.textContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'proposal.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+                showNotification('✅ Предложение сохранено', 'success');
+            } else {
+                showNotification('⚠️ Нет предложения для сохранения', 'warning');
+            }
+        }
+        
+        // Функция генерации нового предложения
+        function generateNew() {
+            const proposalContent = document.getElementById('proposalContent');
+            if (proposalContent) {
+                proposalContent.textContent = '';
+                showNotification('🔄 Готово к генерации нового предложения', 'info');
+            }
+        }
+        
         // Безопасные обработчики событий
         function setupEventListeners() {
             // Обработчики для вкладок
@@ -981,9 +1022,33 @@
             if (selectPremiumBtn) {
                 selectPremiumBtn.addEventListener('click', () => {
                     console.log('🔄 Пользователь выбрал Premium план');
-                    showNotification('💎 Функция обновления в разработке', 'info');
                     closeUpgradeModal();
+                    window.location.href = 'subscription_manager.html';
                 });
+            }
+
+            // Обработчик для кнопки закрытия модального окна
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', closeUpgradeModal);
+            }
+
+            // Обработчик для кнопки копирования предложения
+            const copyBtn = document.getElementById('copyBtn');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', copyProposal);
+            }
+
+            // Обработчик для кнопки сохранения предложения
+            const saveBtn = document.getElementById('saveBtn');
+            if (saveBtn) {
+                saveBtn.addEventListener('click', saveProposal);
+            }
+
+            // Обработчик для кнопки генерации нового предложения
+            const generateNewBtn = document.getElementById('generateNewBtn');
+            if (generateNewBtn) {
+                generateNewBtn.addEventListener('click', generateNew);
             }
         }
         
