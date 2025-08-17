@@ -744,6 +744,12 @@
                 
                 console.log('🎉 showMainContent() завершена успешно');
                 
+                // Сбрасываем дневные лимиты при входе
+                resetDailyLimits();
+                
+                // Обновляем отображение лимитов
+                updateDailyRemainingDisplay();
+                
             } catch (error) {
                 console.error(`❌ Ошибка в showMainContent(): ${error.message}`);
             }
@@ -825,6 +831,9 @@
                     
                     // Показываем основной контент
                     showMainContent();
+                    
+                    // Обновляем отображение лимитов
+                    updateDailyRemainingDisplay();
                 } else {
                     console.log('❌ Пользователь не авторизован');
                     currentUser = null;
@@ -981,6 +990,168 @@
             if (proposalContent) {
                 proposalContent.textContent = '';
                 showNotification('🔄 Готово к генерации нового предложения', 'info');
+            }
+        }
+
+        // Функция генерации предложения
+        function generateProposal(event) {
+            event.preventDefault();
+            
+            // Проверяем лимиты для бесплатной версии
+            if (!currentUser || !isAuthenticated) {
+                showNotification('⚠️ Сначала войдите в систему', 'warning');
+                return;
+            }
+
+            // Проверяем, есть ли у пользователя подписка
+            const userSubscription = currentUser.subscription || 'free';
+            
+            if (userSubscription === 'free') {
+                // Проверяем дневной лимит для бесплатной версии
+                const today = new Date().toDateString();
+                const dailyUsage = JSON.parse(localStorage.getItem(`dailyUsage_${currentUser.id}_${today}`) || '0');
+                
+                if (dailyUsage >= 3) {
+                    showNotification('❌ Достигнут дневной лимит (3 предложения). Обновитесь до Premium для неограниченного доступа!', 'error');
+                    return;
+                }
+                
+                // Увеличиваем счетчик использований
+                const newUsage = dailyUsage + 1;
+                localStorage.setItem(`dailyUsage_${currentUser.id}_${today}`, JSON.stringify(newUsage));
+                
+                // Обновляем отображение оставшихся предложений
+                updateDailyRemainingDisplay();
+                
+                showNotification(`✅ Предложение сгенерировано! Осталось: ${3 - newUsage} предложений`, 'success');
+            } else {
+                // Для платных тарифов лимитов нет
+                showNotification('✅ Предложение генерируется...', 'info');
+            }
+
+            // Получаем данные формы
+            const projectTitle = document.getElementById('projectTitle').value;
+            const projectBudget = document.getElementById('projectBudget').value;
+            const projectDescription = document.getElementById('projectDescription').value;
+            const projectSkills = document.getElementById('projectSkills').value;
+            const proposalType = document.getElementById('proposalType').value;
+
+            // Генерируем предложение (заглушка)
+            const proposal = generateProposalText(projectTitle, projectBudget, projectDescription, projectSkills, proposalType);
+            
+            // Показываем результат
+            const proposalContent = document.getElementById('proposalContent');
+            if (proposalContent) {
+                proposalContent.textContent = proposal;
+                proposalContent.style.display = 'block';
+            }
+        }
+
+        // Функция генерации текста предложения
+        function generateProposalText(title, budget, description, skills, type) {
+            const templates = {
+                'cover_letter': `Уважаемый клиент!
+
+Я заинтересован в вашем проекте "${title}" с бюджетом ${budget}.
+
+${description}
+
+Мои навыки включают: ${skills}
+
+Я готов приступить к работе немедленно и гарантирую высокое качество результата.
+
+С уважением,
+[Ваше имя]`,
+
+                'proposal': `Проект: ${title}
+Бюджет: ${budget}
+
+Описание проекта:
+${description}
+
+Требуемые навыки:
+${skills}
+
+Мое предложение:
+- Детальный анализ требований
+- Поэтапный план выполнения
+- Регулярные отчеты о прогрессе
+- Гарантия качества
+- Поддержка после завершения
+
+Сроки и стоимость обсуждаются индивидуально.`,
+
+                'response': `Отклик на проект "${title}"
+
+Здравствуйте!
+
+Я изучил ваш проект и готов предложить профессиональное решение.
+
+${description}
+
+Мои компетенции:
+${skills}
+
+Почему именно я:
+- Опыт в подобных проектах
+- Качественное выполнение в срок
+- Гибкость в решении задач
+- Доступность для связи
+
+Готов обсудить детали и начать работу!`
+            };
+
+            return templates[type] || templates['proposal'];
+        }
+
+        // Функция обновления отображения оставшихся предложений
+        function updateDailyRemainingDisplay() {
+            if (!currentUser || !isAuthenticated) return;
+            
+            const userSubscription = currentUser.subscription || 'free';
+            
+            if (userSubscription === 'free') {
+                const today = new Date().toDateString();
+                const dailyUsage = JSON.parse(localStorage.getItem(`dailyUsage_${currentUser.id}_${today}`) || '0');
+                const remaining = Math.max(0, 3 - dailyUsage);
+                
+                const dailyRemainingElement = document.getElementById('dailyRemaining');
+                if (dailyRemainingElement) {
+                    dailyRemainingElement.textContent = `Осталось: ${remaining} предложений`;
+                    
+                    // Меняем цвет в зависимости от количества
+                    if (remaining === 0) {
+                        dailyRemainingElement.style.color = '#ef4444'; // красный
+                    } else if (remaining <= 1) {
+                        dailyRemainingElement.style.color = '#f59e0b'; // оранжевый
+                    } else {
+                        dailyRemainingElement.style.color = '#10b981'; // зеленый
+                    }
+                }
+            } else {
+                // Для платных тарифов показываем безлимитный доступ
+                const dailyRemainingElement = document.getElementById('dailyRemaining');
+                if (dailyRemainingElement) {
+                    dailyRemainingElement.textContent = 'Безлимитный доступ';
+                    dailyRemainingElement.style.color = '#10b981'; // зеленый
+                }
+            }
+        }
+
+        // Функция сброса дневных лимитов (вызывается каждый день)
+        function resetDailyLimits() {
+            if (!currentUser || !isAuthenticated) return;
+            
+            const today = new Date().toDateString();
+            const lastReset = localStorage.getItem(`lastReset_${currentUser.id}`);
+            
+            if (lastReset !== today) {
+                // Сбрасываем счетчик для нового дня
+                localStorage.setItem(`dailyUsage_${currentUser.id}_${today}`, '0');
+                localStorage.setItem(`lastReset_${currentUser.id}`, today);
+                
+                // Обновляем отображение
+                updateDailyRemainingDisplay();
             }
         }
         
