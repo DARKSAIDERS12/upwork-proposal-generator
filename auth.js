@@ -545,21 +545,74 @@ window.getUserProfile = getUserProfile;
 window.updateUserLimits = updateUserLimits;
 window.saveProposal = saveProposal;
 window.getProposalsHistory = getProposalsHistory;
-window.checkSupabaseConnection = checkSupabaseConnection; // Добавляем новую функцию
+window.checkSupabaseConnection = checkSupabaseConnection;
+
+// Функция для проверки готовности auth.js
+window.isAuthReady = function() {
+    return typeof window.signInWithGitHub !== 'undefined' &&
+           typeof window.registerUser !== 'undefined' &&
+           typeof window.loginUser !== 'undefined' &&
+           typeof window.logoutUser !== 'undefined' &&
+           typeof window.onAuthStateChange !== 'undefined' &&
+           typeof window.getCurrentUser !== 'undefined' &&
+           typeof window.getUserProfile !== 'undefined' &&
+           typeof window.updateUserLimits !== 'undefined' &&
+           typeof window.saveProposal !== 'undefined' &&
+           typeof window.getProposalsHistory !== 'undefined' &&
+           typeof window.checkSupabaseConnection !== 'undefined';
+};
+
+// Функция для ожидания готовности auth.js
+window.waitForAuthReady = function() {
+    return new Promise((resolve) => {
+        if (window.isAuthReady()) {
+            resolve();
+            return;
+        }
+        
+        const checkInterval = setInterval(() => {
+            if (window.isAuthReady()) {
+                clearInterval(checkInterval);
+                resolve();
+            }
+        }, 100);
+        
+        // Таймаут на случай, если что-то пошло не так
+        setTimeout(() => {
+            clearInterval(checkInterval);
+            console.warn('⚠️ Таймаут ожидания готовности auth.js');
+            resolve();
+        }, 30000);
+    });
+};
 
 // Автоматическая инициализация
 console.log('🚀 auth.js загружен, начинаем инициализацию...');
 
-// Принудительная инициализация через небольшую задержку
-setTimeout(() => {
-    if (typeof createClient !== 'undefined') {
-        console.log('✅ Supabase SDK найден, инициализируем...');
-        initSupabase();
-    } else {
-        console.log('⏳ Supabase SDK еще не загружен, ждем...');
-        initAuth();
-    }
-}, 100);
+// Инициализируем Supabase сразу
+if (typeof window.supabase !== 'undefined') {
+    console.log('✅ Supabase SDK уже доступен, инициализируем...');
+    initSupabase();
+} else {
+    console.log('⏳ Supabase SDK еще не загружен, ждем...');
+    // Ждем загрузки Supabase SDK
+    const checkSupabase = setInterval(() => {
+        if (typeof window.supabase !== 'undefined') {
+            clearInterval(checkSupabase);
+            console.log('✅ Supabase SDK загружен, инициализируем...');
+            initSupabase();
+        }
+    }, 100);
+    
+    // Таймаут для Supabase SDK
+    setTimeout(() => {
+        clearInterval(checkSupabase);
+        console.error('❌ Таймаут загрузки Supabase SDK');
+    }, 10000);
+}
+
+// Уведомляем, что auth.js готов
+console.log('✅ auth.js полностью загружен и готов к использованию');
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAuth);
