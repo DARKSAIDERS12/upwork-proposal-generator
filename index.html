@@ -119,7 +119,7 @@
             <!-- Proposal Generator -->
             <div class="generator-section">
                 <h2>Генератор предложений</h2>
-                <form id="proposalForm" onsubmit="generateProposal(event)">
+                <form id="proposalForm">
                     <div class="form-row">
                         <div class="form-group">
                             <label for="projectTitle">Название проекта:</label>
@@ -996,22 +996,34 @@
         // Функция генерации предложения
         function generateProposal(event) {
             event.preventDefault();
+            console.log('🔄 Функция generateProposal вызвана');
             
             // Проверяем лимиты для бесплатной версии
             if (!currentUser || !isAuthenticated) {
+                console.log('❌ Пользователь не авторизован');
                 showNotification('⚠️ Сначала войдите в систему', 'warning');
                 return;
             }
+
+            console.log('✅ Пользователь авторизован:', currentUser.email);
+            console.log('🔐 Подписка пользователя:', currentUser.subscription || 'free');
 
             // Проверяем, есть ли у пользователя подписка
             const userSubscription = currentUser.subscription || 'free';
             
             if (userSubscription === 'free') {
+                console.log('🆓 Проверяем лимиты для бесплатной версии');
+                
                 // Проверяем дневной лимит для бесплатной версии
                 const today = new Date().toDateString();
                 const dailyUsage = JSON.parse(localStorage.getItem(`dailyUsage_${currentUser.id}_${today}`) || '0');
                 
+                console.log('📅 Сегодня:', today);
+                console.log('📊 Текущее использование:', dailyUsage);
+                console.log('🔑 Ключ localStorage:', `dailyUsage_${currentUser.id}_${today}`);
+                
                 if (dailyUsage >= 3) {
+                    console.log('❌ Достигнут дневной лимит');
                     showNotification('❌ Достигнут дневной лимит (3 предложения). Обновитесь до Premium для неограниченного доступа!', 'error');
                     return;
                 }
@@ -1020,11 +1032,15 @@
                 const newUsage = dailyUsage + 1;
                 localStorage.setItem(`dailyUsage_${currentUser.id}_${today}`, JSON.stringify(newUsage));
                 
+                console.log('✅ Счетчик обновлен:', newUsage);
+                console.log('💾 Сохранено в localStorage');
+                
                 // Обновляем отображение оставшихся предложений
                 updateDailyRemainingDisplay();
                 
                 showNotification(`✅ Предложение сгенерировано! Осталось: ${3 - newUsage} предложений`, 'success');
             } else {
+                console.log('💎 Платный тариф - лимитов нет');
                 // Для платных тарифов лимитов нет
                 showNotification('✅ Предложение генерируется...', 'info');
             }
@@ -1106,52 +1122,88 @@ ${skills}
 
         // Функция обновления отображения оставшихся предложений
         function updateDailyRemainingDisplay() {
-            if (!currentUser || !isAuthenticated) return;
+            console.log('🔄 updateDailyRemainingDisplay вызвана');
             
+            if (!currentUser || !isAuthenticated) {
+                console.log('❌ Пользователь не авторизован в updateDailyRemainingDisplay');
+                return;
+            }
+            
+            console.log('✅ Пользователь авторизован в updateDailyRemainingDisplay');
             const userSubscription = currentUser.subscription || 'free';
+            console.log('🔐 Подписка в updateDailyRemainingDisplay:', userSubscription);
             
             if (userSubscription === 'free') {
+                console.log('🆓 Обновляем отображение для бесплатной версии');
                 const today = new Date().toDateString();
                 const dailyUsage = JSON.parse(localStorage.getItem(`dailyUsage_${currentUser.id}_${today}`) || '0');
                 const remaining = Math.max(0, 3 - dailyUsage);
                 
+                console.log('📅 Сегодня в updateDailyRemainingDisplay:', today);
+                console.log('📊 Использование в updateDailyRemainingDisplay:', dailyUsage);
+                console.log('🔢 Осталось в updateDailyRemainingDisplay:', remaining);
+                
                 const dailyRemainingElement = document.getElementById('dailyRemaining');
                 if (dailyRemainingElement) {
                     dailyRemainingElement.textContent = `Осталось: ${remaining} предложений`;
+                    console.log('✅ Элемент dailyRemaining обновлен');
                     
                     // Меняем цвет в зависимости от количества
                     if (remaining === 0) {
                         dailyRemainingElement.style.color = '#ef4444'; // красный
+                        console.log('🔴 Цвет установлен: красный');
                     } else if (remaining <= 1) {
                         dailyRemainingElement.style.color = '#f59e0b'; // оранжевый
+                        console.log('🟠 Цвет установлен: оранжевый');
                     } else {
                         dailyRemainingElement.style.color = '#10b981'; // зеленый
+                        console.log('🟢 Цвет установлен: зеленый');
                     }
+                } else {
+                    console.log('❌ Элемент dailyRemaining не найден');
                 }
             } else {
+                console.log('💎 Обновляем отображение для платного тарифа');
                 // Для платных тарифов показываем безлимитный доступ
                 const dailyRemainingElement = document.getElementById('dailyRemaining');
                 if (dailyRemainingElement) {
                     dailyRemainingElement.textContent = 'Безлимитный доступ';
                     dailyRemainingElement.style.color = '#10b981'; // зеленый
+                    console.log('✅ Элемент dailyRemaining обновлен для платного тарифа');
+                } else {
+                    console.log('❌ Элемент dailyRemaining не найден для платного тарифа');
                 }
             }
         }
 
         // Функция сброса дневных лимитов (вызывается каждый день)
         function resetDailyLimits() {
-            if (!currentUser || !isAuthenticated) return;
+            console.log('🔄 resetDailyLimits вызвана');
             
+            if (!currentUser || !isAuthenticated) {
+                console.log('❌ Пользователь не авторизован в resetDailyLimits');
+                return;
+            }
+            
+            console.log('✅ Пользователь авторизован в resetDailyLimits');
             const today = new Date().toDateString();
             const lastReset = localStorage.getItem(`lastReset_${currentUser.id}`);
             
+            console.log('📅 Сегодня в resetDailyLimits:', today);
+            console.log('🔄 Последний сброс в resetDailyLimits:', lastReset);
+            
             if (lastReset !== today) {
+                console.log('🆕 Сбрасываем счетчик для нового дня');
                 // Сбрасываем счетчик для нового дня
                 localStorage.setItem(`dailyUsage_${currentUser.id}_${today}`, '0');
                 localStorage.setItem(`lastReset_${currentUser.id}`, today);
                 
+                console.log('✅ Счетчик сброшен для нового дня');
+                
                 // Обновляем отображение
                 updateDailyRemainingDisplay();
+            } else {
+                console.log('🔄 Сброс уже был сегодня');
             }
         }
         
@@ -1181,6 +1233,12 @@ ${skills}
             const registerForm = document.getElementById('registerFormElement');
             if (registerForm) {
                 registerForm.addEventListener('submit', handleRegister);
+            }
+            
+            // Обработчик для формы генерации предложений
+            const proposalForm = document.getElementById('proposalForm');
+            if (proposalForm) {
+                proposalForm.addEventListener('submit', generateProposal);
             }
             
             // Обработчик для кнопки выхода
