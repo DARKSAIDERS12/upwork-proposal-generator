@@ -1046,78 +1046,109 @@
             }
 
             // Получаем данные формы
-            const projectTitle = document.getElementById('projectTitle').value;
-            const projectBudget = document.getElementById('projectBudget').value;
-            const projectDescription = document.getElementById('projectDescription').value;
-            const projectSkills = document.getElementById('projectSkills').value;
-            const proposalType = document.getElementById('proposalType').value;
+            const projectTitleElement = document.getElementById('projectTitle');
+            const projectBudgetElement = document.getElementById('projectBudget');
+            const projectDescriptionElement = document.getElementById('projectDescription');
+            const specializationElement = document.getElementById('specialization');
+            const toneElement = document.getElementById('tone');
+
+            // Проверяем, что все элементы существуют
+            if (!projectTitleElement || !projectBudgetElement || !projectDescriptionElement || !specializationElement || !toneElement) {
+                console.error('❌ Не все элементы формы найдены');
+                showNotification('❌ Ошибка: не все поля формы найдены', 'error');
+                return;
+            }
+
+            const projectTitle = projectTitleElement.value;
+            const projectBudget = projectBudgetElement.value;
+            const projectDescription = projectDescriptionElement.value;
+            const specialization = specializationElement.value;
+            const tone = toneElement.value;
+
+            // Проверяем, что все поля заполнены
+            if (!projectTitle || !projectBudget || !projectDescription || !specialization || !tone) {
+                showNotification('⚠️ Пожалуйста, заполните все поля формы', 'warning');
+                return;
+            }
+
+            console.log('📝 Данные формы получены:', { projectTitle, projectBudget, projectDescription, specialization, tone });
 
             // Генерируем предложение (заглушка)
-            const proposal = generateProposalText(projectTitle, projectBudget, projectDescription, projectSkills, proposalType);
+            const proposal = generateProposalText(projectTitle, projectBudget, projectDescription, specialization, tone);
             
             // Показываем результат
+            const proposalResult = document.getElementById('proposalResult');
             const proposalContent = document.getElementById('proposalContent');
-            if (proposalContent) {
+            
+            if (proposalResult && proposalContent) {
                 proposalContent.textContent = proposal;
-                proposalContent.style.display = 'block';
+                proposalResult.style.display = 'block';
+                console.log('✅ Результат показан пользователю');
+            } else {
+                console.error('❌ Элементы результата не найдены');
+                showNotification('❌ Ошибка отображения результата', 'error');
             }
         }
 
         // Функция генерации текста предложения
-        function generateProposalText(title, budget, description, skills, type) {
+        function generateProposalText(title, budget, description, specialization, tone) {
             const templates = {
-                'cover_letter': `Уважаемый клиент!
+                'Professional': `Уважаемый клиент!
 
 Я заинтересован в вашем проекте "${title}" с бюджетом ${budget}.
 
 ${description}
 
-Мои навыки включают: ${skills}
+Моя специализация: ${specialization}
 
 Я готов приступить к работе немедленно и гарантирую высокое качество результата.
 
 С уважением,
 [Ваше имя]`,
 
-                'proposal': `Проект: ${title}
+                'Friendly': `Привет! 👋
+
+Я с удовольствием помогу с вашим проектом "${title}" (бюджет: ${budget}).
+
+${description}
+
+Моя специализация: ${specialization}
+
+Давайте обсудим детали и начнем работу! 😊
+
+С наилучшими пожеланиями,
+[Ваше имя]`,
+
+                'Formal': `Уважаемый господин/госпожа,
+
+Настоящим выражаю заинтересованность в участии в проекте "${title}" с указанным бюджетом ${budget}.
+
+${description}
+
+Моя профессиональная специализация: ${specialization}
+
+Готов предоставить детальное техническое предложение и обсудить условия сотрудничества.
+
+С уважением,
+[Ваше имя]`,
+
+                'Creative': `🎨 Креативное предложение для проекта "${title}" 🚀
+
 Бюджет: ${budget}
 
-Описание проекта:
 ${description}
 
-Требуемые навыки:
-${skills}
+✨ Моя специализация: ${specialization}
 
-Мое предложение:
-- Детальный анализ требований
-- Поэтапный план выполнения
-- Регулярные отчеты о прогрессе
-- Гарантия качества
-- Поддержка после завершения
+💡 Готов создать что-то уникальное и впечатляющее!
 
-Сроки и стоимость обсуждаются индивидуально.`,
+🎯 Давайте вместе воплотим ваши идеи в жизнь!
 
-                'response': `Отклик на проект "${title}"
-
-Здравствуйте!
-
-Я изучил ваш проект и готов предложить профессиональное решение.
-
-${description}
-
-Мои компетенции:
-${skills}
-
-Почему именно я:
-- Опыт в подобных проектах
-- Качественное выполнение в срок
-- Гибкость в решении задач
-- Доступность для связи
-
-Готов обсудить детали и начать работу!`
+С творческим подходом,
+[Ваше имя]`
             };
 
-            return templates[type] || templates['proposal'];
+            return templates[tone] || templates['Professional'];
         }
 
         // Функция обновления отображения оставшихся предложений
