@@ -3,690 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Управление подпиской - Upwork Proposal Generator</title>
+    <title>Тарифы и подписки - Upwork Proposal Generator</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .subscription-card {
-            transition: all 0.3s ease;
-        }
-        .subscription-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-        .status-active {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-        .status-expired {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <!-- Проверка аутентификации -->
-    <script>
-        // Проверяем, авторизован ли пользователь
-        function checkAuth() {
-            console.log('🔄 Проверяем аутентификацию...');
-            
-            // Проверяем localStorage
-            const user = localStorage.getItem('user');
-            if (user) {
-                try {
-                    const userData = JSON.parse(user);
-                    console.log('✅ Пользователь найден в localStorage:', userData.email);
-                    
-                    // Показываем информацию о пользователе
-                    const userInfo = document.getElementById('userInfo');
-                    const userEmail = document.getElementById('userEmail');
-                    
-                    if (userInfo && userEmail) {
-                        userEmail.textContent = userData.email;
-                        userInfo.classList.remove('hidden');
-                        console.log('✅ Информация о пользователе показана');
-                    }
-                    
-                    // Загружаем данные подписки
-                    if (typeof loadSubscriptionData === 'function') {
-                        loadSubscriptionData();
-                    }
-                    
-                    return true;
-                } catch (error) {
-                    console.error('❌ Ошибка парсинга данных пользователя:', error);
-                }
-            }
-            
-            console.log('❌ Пользователь не авторизован, перенаправляем на вход');
-            // Перенаправляем на главную страницу для входа
-            window.location.href = 'index.html';
-            return false;
-        }
-        
-        // Проверяем аутентификацию при загрузке страницы
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', checkAuth);
-        } else {
-            checkAuth();
-        }
-    </script>
-    
-    <!-- Навигация -->
-    <nav class="bg-white shadow-lg">
-        <div class="container mx-auto px-4">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center">
-                    <a href="index.html" class="text-2xl font-bold text-blue-600">🚀 Upwork Proposals</a>
+                    <a href="index.html" class="text-2xl font-bold text-blue-600">🚀 Upwork Proposal Generator</a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <a href="index.html" class="text-gray-600 hover:text-blue-600 transition duration-200">← Назад к генератору</a>
-                    <div id="userInfo" class="hidden">
-                        <span id="userEmail" class="text-gray-700 font-medium"></span>
-                        <button id="logoutBtn" class="ml-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-200">
-                            Выйти
-                        </button>
-                    </div>
+                    <span id="userEmail" class="text-gray-700"></span>
+                    <button id="logoutBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition duration-200">
+                        Выйти
+                    </button>
                 </div>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <div class="container mx-auto px-4 py-8">
-        <!-- Заголовок -->
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">⚙️ Управление подпиской</h1>
-            <p class="text-xl text-gray-600">Контролируйте свой тарифный план и настройки</p>
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Выберите подходящий тариф</h1>
+            <p class="text-xl text-gray-600">Получите доступ к продвинутым возможностям AI для создания предложений</p>
         </div>
 
-        <!-- Текущая подписка -->
-        <div id="currentSubscription" class="max-w-4xl mx-auto mb-8">
-            <!-- Загрузка... -->
-        </div>
-
-        <!-- История платежей -->
-        <div id="paymentHistory" class="max-w-4xl mx-auto mb-8">
-            <!-- Загрузка... -->
-        </div>
-
-        <!-- Действия с подпиской -->
-        <div id="subscriptionActions" class="max-w-4xl mx-auto mb-8">
-            <!-- Загрузка... -->
-        </div>
-
-        <!-- Информация о тарифах -->
-        <div class="max-w-6xl mx-auto">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-8">📊 Сравнение тарифов</h2>
-            <div class="grid md:grid-cols-4 gap-6">
-                <!-- Бесплатный план -->
-                <div class="bg-white rounded-lg shadow-md p-6 subscription-card">
-                    <div class="text-center mb-4">
-                        <h3 class="text-xl font-semibold text-gray-600">Бесплатный</h3>
-                        <div class="text-3xl font-bold text-gray-800">0 ₽</div>
-                        <div class="text-gray-600">навсегда</div>
-                    </div>
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            3 предложения/день
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Демо AI
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Базовые шаблоны
-                        </li>
-                        <li class="flex items-center text-gray-400">
-                            <span class="mr-2">❌</span>
-                            Экспорт
-                        </li>
-                        <li class="flex items-center text-gray-400">
-                            <span class="mr-2">❌</span>
-                            Приоритетная поддержка
-                        </li>
-                    </ul>
+        <!-- Pricing Cards -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <!-- Free Plan -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-gray-200">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Бесплатный</h3>
+                    <div class="text-4xl font-bold text-gray-900 mb-2">0 ₽</div>
+                    <div class="text-gray-600 mb-8">навсегда</div>
                 </div>
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        3 предложения в день
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Базовые шаблоны
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Демо AI
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Сообщество поддержка
+                    </li>
+                </ul>
+                <button class="w-full bg-gray-300 text-gray-700 py-3 px-6 rounded-lg font-semibold cursor-not-allowed">
+                    Текущий план
+                </button>
+            </div>
 
-                <!-- Premium план -->
-                <div class="bg-white rounded-lg shadow-md p-6 subscription-card border-2 border-blue-200">
-                    <div class="text-center mb-4">
-                        <h3 class="text-xl font-semibold text-blue-600">Premium</h3>
-                        <div class="text-3xl font-bold text-blue-600">1,500 ₽</div>
-                        <div class="text-blue-600">в месяц</div>
-                    </div>
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            50 предложений/день
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Yandex GPT
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Премиум шаблоны
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Экспорт
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Поддержка
-                        </li>
-                    </ul>
+            <!-- Premium Plan -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 border-2 border-blue-500 transform scale-105">
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span class="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">Популярный</span>
                 </div>
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Premium</h3>
+                    <div class="text-4xl font-bold text-blue-600 mb-2">1 500 ₽</div>
+                    <div class="text-gray-600 mb-8">в месяц</div>
+                </div>
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Неограниченные предложения
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Расширенные шаблоны
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Продвинутый AI (Yandex GPT)
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Приоритетная поддержка
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Экспорт предложений
+                    </li>
+                </ul>
+                <button id="selectPremiumBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-200">
+                    Выбрать Premium
+                </button>
+            </div>
 
-                <!-- Pro план -->
-                <div class="bg-white rounded-lg shadow-md p-6 subscription-card border-2 border-purple-200">
-                    <div class="text-center mb-4">
-                        <h3 class="text-xl font-semibold text-purple-600">Pro</h3>
-                        <div class="text-3xl font-bold text-purple-600">3,000 ₽</div>
-                        <div class="text-purple-600">в месяц</div>
-                    </div>
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            200 предложений/день
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Yandex GPT + GigaChat
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Все шаблоны
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Аналитика
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Приоритетная поддержка
-                        </li>
-                    </ul>
+            <!-- Enterprise Plan -->
+            <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-purple-200">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-4">Enterprise</h3>
+                    <div class="text-4xl font-bold text-gray-900 mb-2">5 000 ₽</div>
+                    <div class="text-gray-600 mb-8">в месяц</div>
                 </div>
-
-                <!-- Enterprise план -->
-                <div class="bg-white rounded-lg shadow-md p-6 subscription-card border-2 border-green-200">
-                    <div class="text-center mb-4">
-                        <h3 class="text-xl font-semibold text-green-600">Enterprise</h3>
-                        <div class="text-3xl font-bold text-green-600">9,900 ₽</div>
-                        <div class="text-green-600">в месяц</div>
-                    </div>
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Безлимитные предложения
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Все AI провайдеры
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            API доступ
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Персональная поддержка
-                        </li>
-                        <li class="flex items-center">
-                            <span class="text-green-500 mr-2">✅</span>
-                            Белый лейбл
-                        </li>
-                    </ul>
-                </div>
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Все возможности Premium
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        API доступ
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Белый лейбл
+                    </li>
+                    <li class="flex items-center">
+                        <span class="text-green-500 mr-3">✓</span>
+                        Персональный менеджер
+                    </li>
+                </ul>
+                <button class="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 px-6 rounded-lg font-semibold transition duration-200">
+                    Связаться с нами
+                </button>
             </div>
         </div>
 
-        <!-- Поддержка -->
-        <div class="max-w-2xl mx-auto mt-12 text-center">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">Нужна помощь?</h3>
-            <p class="text-gray-600 mb-4">Наша команда готова помочь вам с любыми вопросами</p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="mailto:support@upworkproposals.ru" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-                    📧 Написать в поддержку
-                </a>
-                <a href="https://t.me/upworkproposals" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-                    💬 Telegram чат
-                </a>
+        <!-- Additional Info -->
+        <div class="mt-16 text-center">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">Часто задаваемые вопросы</h2>
+            <div class="max-w-4xl mx-auto space-y-6">
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Как отменить подписку?</h3>
+                    <p class="text-gray-600">Вы можете отменить подписку в любое время в личном кабинете. Доступ сохранится до конца оплаченного периода.</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Есть ли пробный период?</h3>
+                    <p class="text-gray-600">Да, мы предоставляем 7 дней бесплатного пробного периода для всех платных тарифов.</p>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">Какие способы оплаты?</h3>
+                    <p class="text-gray-600">Мы принимаем все основные способы оплаты: банковские карты, электронные кошельки и банковские переводы.</p>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-12 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">О сервисе</h3>
+                    <p class="text-gray-300">Создавайте профессиональные предложения для Upwork с помощью искусственного интеллекта</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Поддержка</h3>
+                    <p class="text-gray-300">Email: s.proposalgenerator@mail.ru</p>
+                    <p class="text-gray-300">Время работы: 24/7</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-4">Ссылки</h3>
+                    <a href="index.html" class="block text-gray-300 hover:text-white mb-2">Главная</a>
+                    <a href="terms.html" class="block text-gray-300 hover:text-white mb-2">Условия использования</a>
+                    <a href="privacy.html" class="block text-gray-300 hover:text-white">Политика конфиденциальности</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
-        // currentUser объявлен в index.html
-        
-        // API URL для ЮKassa
-        const API_BASE_URL = 'http://localhost:5000/api';
-
-        // Инициализация страницы
-        document.addEventListener('DOMContentLoaded', function() {
-            checkAuthStatus();
-            loadSubscriptionData();
-        });
-
-        // Проверка статуса аутентификации
-        async function checkAuthStatus() {
-            const sessionToken = localStorage.getItem('sessionToken');
-            
-            if (sessionToken) {
-                try {
-                    const response = await fetch('https://upwork-auth-server.onrender.com/api/user', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${sessionToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        currentUser = data.user;
-                        document.getElementById('userInfo').classList.remove('hidden');
-                        document.getElementById('userEmail').textContent = currentUser.email;
-                        return; // Успешная аутентификация
-                    } else {
-                        // Токен недействителен
-                        localStorage.removeItem('sessionToken');
-                        localStorage.removeItem('user');
-                    }
-                } catch (error) {
-                    console.error('Ошибка проверки аутентификации:', error);
-                    // При сетевых ошибках не перенаправляем сразу
-                    const user = JSON.parse(localStorage.getItem('user') || 'null');
-                    if (user) {
-                        currentUser = user;
-                        document.getElementById('userInfo').classList.remove('hidden');
-                        document.getElementById('userEmail').textContent = user.email;
-                        return;
-                    }
-                }
+        // Проверяем аутентификацию при загрузке страницы
+        function checkAuth() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                console.log('❌ Пользователь не авторизован, перенаправляем на главную');
+                window.location.href = 'index.html';
+                return;
             }
-            
-            // Если нет токена или он недействителен - перенаправляем на главную
-            window.location.href = 'index.html';
-        }
-
-        // Загрузка данных о подписке
-        async function loadSubscriptionData() {
-            if (!currentUser) return;
-
-            try {
-                // Загружаем текущую подписку из API
-                await loadCurrentSubscription();
-                
-                // Загружаем историю платежей из API
-                await loadPaymentHistory();
-                
-                // Загружаем действия с подпиской
-                loadSubscriptionActions();
-            } catch (error) {
-                console.error('Ошибка загрузки данных:', error);
-                // Fallback к локальным данным
-                loadCurrentSubscription();
-                loadPaymentHistory();
-                loadSubscriptionActions();
-            }
-        }
-
-        // Загрузка текущей подписки
-        async function loadCurrentSubscription() {
-            const container = document.getElementById('currentSubscription');
             
             try {
-                // Пытаемся получить данные из API
-                const response = await fetch(`${API_BASE_URL}/subscription/status/${currentUser.id || 1}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.subscription && data.subscription.status !== 'free') {
-                        displaySubscriptionFromAPI(data.subscription);
-                        return;
-                    }
+                const userData = JSON.parse(user);
+                console.log('✅ Пользователь авторизован:', userData.email);
+                
+                // Показываем email пользователя
+                const userEmailElement = document.getElementById('userEmail');
+                if (userEmailElement) {
+                    userEmailElement.textContent = userData.email;
                 }
             } catch (error) {
-                console.error('Ошибка загрузки подписки из API:', error);
-            }
-            
-            // Fallback к локальным данным
-            if (currentUser.subscription && currentUser.subscription !== 'free') {
-                const subscriptionInfo = getSubscriptionInfo(currentUser.subscription);
-                const isExpired = currentUser.subscriptionExpires && new Date(currentUser.subscriptionExpires) < new Date();
-                
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800">Текущая подписка</h2>
-                            <div class="px-4 py-2 rounded-full text-white font-semibold ${isExpired ? 'status-expired' : 'status-active'}">
-                                ${isExpired ? 'Истекла' : 'Активна'}
-                            </div>
-                        </div>
-                        
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800 mb-4">${subscriptionInfo.name}</h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">Тариф:</span>
-                                        <span class="font-semibold">${subscriptionInfo.name}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">AI провайдер:</span>
-                                        <span class="font-semibold">${subscriptionInfo.aiProvider}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">Дневной лимит:</span>
-                                        <span class="font-semibold">${subscriptionInfo.dailyLimit === '∞' ? 'Безлимитно' : subscriptionInfo.dailyLimit + ' предложений'}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">Стоимость:</span>
-                                        <span class="font-semibold">${subscriptionInfo.price}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <h3 class="text-xl font-semibold text-gray-800 mb-4">Статистика</h3>
-                                <div class="space-y-3">
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">Осталось сегодня:</span>
-                                        <span class="font-semibold">${currentUser.dailyRemaining === -1 ? '∞' : currentUser.dailyRemaining}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">Всего предложений:</span>
-                                        <span class="font-semibold">${currentUser.proposalsCount || 0}</span>
-                                    </div>
-                                    ${currentUser.subscriptionExpires ? `
-                                    <div class="flex justify-between">
-                                        <span class="text-gray-600">Действует до:</span>
-                                        <span class="font-semibold">${new Date(currentUser.subscriptionExpires).toLocaleDateString('ru-RU')}</span>
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">У вас нет активной подписки</h2>
-                        <p class="text-gray-600 mb-6">Обновитесь до Premium для получения доступа к расширенным функциям</p>
-                        <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-                            🚀 Обновить подписку
-                        </a>
-                    </div>
-                `;
+                console.error('❌ Ошибка парсинга данных пользователя:', error);
+                window.location.href = 'index.html';
             }
         }
 
-        // Загрузка истории платежей
-        async function loadPaymentHistory() {
-            const container = document.getElementById('paymentHistory');
-            
-            try {
-                // Пытаемся получить данные из API
-                const response = await fetch(`${API_BASE_URL}/payment/history/${currentUser.id || 1}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    displayPaymentHistoryFromAPI(data.payments);
-                    return;
-                }
-            } catch (error) {
-                console.error('Ошибка загрузки истории платежей из API:', error);
-            }
-            
-            // Fallback к локальным данным
-            const payments = [
-                {
-                    id: 'yookassa_001',
-                    date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-                    amount: 1500,
-                    currency: 'RUB',
-                    status: 'succeeded',
-                    plan: 'premium'
-                }
-            ];
-
-            if (payments.length > 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">История платежей</h2>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b">
-                                        <th class="text-left py-3 px-4">Дата</th>
-                                        <th class="text-left py-3 px-4">План</th>
-                                        <th class="text-left py-3 px-4">Сумма</th>
-                                        <th class="text-left py-3 px-4">Статус</th>
-                                        <th class="text-left py-3 px-4">ID платежа</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${payments.map(payment => `
-                                        <tr class="border-b hover:bg-gray-50">
-                                            <td class="py-3 px-4">${payment.date.toLocaleDateString('ru-RU')}</td>
-                                            <td class="py-3 px-4">
-                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                                    ${payment.plan.toUpperCase()}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 px-4 font-semibold">${payment.amount.toLocaleString()} ${payment.currency}</td>
-                                            <td class="py-3 px-4">
-                                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                                    ${payment.status === 'succeeded' ? 'Успешно' : payment.status}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 px-4 text-sm text-gray-500">${payment.id}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">История платежей</h2>
-                        <p class="text-gray-600">У вас пока нет платежей</p>
-                    </div>
-                `;
-            }
-        }
-        
-        // Отображение истории платежей из API
-        function displayPaymentHistoryFromAPI(payments) {
-            const container = document.getElementById('paymentHistory');
-            
-            if (payments && payments.length > 0) {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">История платежей</h2>
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b">
-                                        <th class="text-left py-3 px-4">Дата</th>
-                                        <th class="text-left py-3 px-4">План</th>
-                                        <th class="text-left py-3 px-4">Сумма</th>
-                                        <th class="text-left py-3 px-4">Статус</th>
-                                        <th class="text-left py-3 px-4">ID платежа</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${payments.map(payment => `
-                                        <tr class="border-b hover:bg-gray-50">
-                                            <td class="py-3 px-4">${new Date(payment.created_at).toLocaleDateString('ru-RU')}</td>
-                                            <td class="py-3 px-4">
-                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                                                    ${payment.plan_type.toUpperCase()}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 px-4 font-semibold">${payment.amount.toLocaleString()} ${payment.currency}</td>
-                                            <td class="py-3 px-4">
-                                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                                    ${payment.status === 'succeeded' ? 'Успешно' : payment.status}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 px-4 text-sm text-gray-500">${payment.payment_id}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">История платежей</h2>
-                        <p class="text-gray-600">У вас пока нет платежей</p>
-                    </div>
-                `;
-            }
-        }
-
-        // Загрузка действий с подпиской
-        function loadSubscriptionActions() {
-            const container = document.getElementById('subscriptionActions');
-            
-            if (currentUser.subscription && currentUser.subscription !== 'free') {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Действия с подпиской</h2>
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div class="space-y-4">
-                                <button onclick="renewSubscription()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-                                    🔄 Продлить подписку
-                                </button>
-                                <button onclick="changePlan()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-                                    🔄 Изменить план
-                                </button>
-                            </div>
-                            <div class="space-y-4">
-                                <button onclick="pauseSubscription()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-                                    ⏸️ Приостановить
-                                </button>
-                                <button onclick="cancelSubscription()" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-                                    ❌ Отменить подписку
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <p class="text-yellow-800 text-sm">
-                                ⚠️ <strong>Внимание:</strong> Отмена подписки вступит в силу в конце текущего периода. 
-                                Вы сохраните доступ до ${currentUser.subscriptionExpires ? new Date(currentUser.subscriptionExpires).toLocaleDateString('ru-RU') : 'конца периода'}.
-                            </p>
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-4">Действия с подпиской</h2>
-                        <p class="text-gray-600 mb-6">У вас нет активной подписки для управления</p>
-                        <a href="index.html" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
-                            🚀 Оформить подписку
-                        </a>
-                    </div>
-                `;
-            }
-        }
-
-        // Получить информацию о подписке
-        function getSubscriptionInfo(subscriptionType) {
-            const subscriptionData = {
-                'free': {
-                    name: 'Бесплатная',
-                    aiProvider: 'Демо-режим',
-                    dailyLimit: 3,
-                    price: '0 ₽'
-                },
-                'premium': {
-                    name: 'Premium',
-                    aiProvider: 'Yandex GPT',
-                    dailyLimit: 50,
-                    price: '1,500 ₽'
-                },
-                'pro': {
-                    name: 'Pro',
-                    aiProvider: 'Yandex GPT + GigaChat',
-                    dailyLimit: 200,
-                    price: '3,000 ₽'
-                },
-                'enterprise': {
-                    name: 'Enterprise',
-                    aiProvider: 'Все AI провайдеры',
-                    dailyLimit: '∞',
-                    price: '9,900 ₽'
-                }
-            };
-            
-            return subscriptionData[subscriptionType] || subscriptionData['free'];
-        }
-
-        // Действия с подпиской
-        function renewSubscription() {
-            alert('Функция продления подписки будет доступна в ближайшее время');
-        }
-
-        function changePlan() {
-            alert('Функция изменения плана будет доступна в ближайшее время');
-        }
-
-        function pauseSubscription() {
-            alert('Функция приостановки подписки будет доступна в ближайшее время');
-        }
-
-        function cancelSubscription() {
-            if (confirm('Вы уверены, что хотите отменить подписку? Это действие нельзя отменить.')) {
-                // Имитация отмены подписки
-                currentUser.subscription = 'free';
-                currentUser.dailyRemaining = 3;
-                currentUser.subscriptionExpires = null;
-                
-                // Обновляем пользователя
-                const users = JSON.parse(localStorage.getItem('users') || '[]');
-                const userIndex = users.findIndex(u => u.email === currentUser.email);
-                if (userIndex !== -1) {
-                    users[userIndex] = currentUser;
-                    localStorage.setItem('users', JSON.stringify(users));
-                }
-                
-                localStorage.setItem('user', JSON.stringify(currentUser));
-                
-                // Перезагружаем данные
-                loadSubscriptionData();
-                
-                alert('Подписка отменена. Вы вернулись на бесплатный план.');
-            }
-        }
-
-        function logout() {
+        // Обработчик выхода
+        function handleLogout() {
             console.log('🔄 Выход из системы...');
             localStorage.removeItem('user');
-            console.log('✅ Данные пользователя удалены из localStorage');
             window.location.href = 'index.html';
         }
-        
-        // Добавляем обработчик для кнопки выхода
+
+        // Обработчик выбора Premium
+        function handlePremiumSelection() {
+            console.log('🔄 Пользователь выбрал Premium план');
+            showNotification('💎 Спасибо за выбор Premium! Мы свяжемся с вами для оформления подписки.', 'success');
+            
+            // Здесь можно добавить логику для перехода к оплате
+            setTimeout(() => {
+                showNotification('📧 Отправьте запрос на s.proposalgenerator@mail.ru для оформления подписки', 'info');
+            }, 2000);
+        }
+
+        // Простая система уведомлений
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' :
+                type === 'error' ? 'bg-red-500 text-white' :
+                type === 'warning' ? 'bg-yellow-500 text-black' :
+                'bg-blue-500 text-white'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+
+        // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Страница подписки загружена');
+            
+            // Проверяем аутентификацию
+            checkAuth();
+            
+            // Добавляем обработчики событий
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
-                logoutBtn.addEventListener('click', logout);
-                console.log('✅ Обработчик для кнопки выхода добавлен');
-            } else {
-                console.log('❌ Кнопка выхода не найдена');
+                logoutBtn.addEventListener('click', handleLogout);
             }
+            
+            const selectPremiumBtn = document.getElementById('selectPremiumBtn');
+            if (selectPremiumBtn) {
+                selectPremiumBtn.addEventListener('click', handlePremiumSelection);
+            }
+            
+            console.log('✅ Все обработчики событий настроены');
         });
     </script>
 </body>

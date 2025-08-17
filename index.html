@@ -636,8 +636,11 @@
         
         function upgradeToPremium() {
             console.log('🔄 Попытка обновления до Premium...');
+            console.log('📍 Текущий URL:', window.location.href);
+            console.log('🖥️ User Agent:', navigator.userAgent);
             // Логика обновления до Premium
             closeUpgradeModal();
+            console.log('🚀 Перенаправляем на subscription_manager.html...');
             window.location.href = 'subscription_manager.html';
         }
         
@@ -1022,7 +1025,11 @@
             if (selectPremiumBtn) {
                 selectPremiumBtn.addEventListener('click', () => {
                     console.log('🔄 Пользователь выбрал Premium план');
+                    console.log('📍 Текущий URL:', window.location.href);
+                    console.log('🖥️ User Agent:', navigator.userAgent);
+                    console.log('📱 Платформа:', navigator.platform);
                     closeUpgradeModal();
+                    console.log('🚀 Перенаправляем на subscription_manager.html...');
                     window.location.href = 'subscription_manager.html';
                 });
             }
