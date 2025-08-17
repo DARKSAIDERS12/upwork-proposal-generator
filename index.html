@@ -868,25 +868,33 @@
                 });
                 console.log('✅ auth.js загружен');
                 
-                // Ждем полной инициализации auth.js
+                // Ждем полной инициализации auth.js с увеличенным таймаутом
                 await new Promise((resolve) => {
                     const checkAuth = setInterval(() => {
+                        console.log('🔍 Проверяем инициализацию auth.js...');
+                        console.log('onAuthStateChange:', typeof onAuthStateChange);
+                        console.log('initSupabase:', typeof initSupabase);
+                        console.log('registerUser:', typeof registerUser);
+                        console.log('loginUser:', typeof loginUser);
+                        console.log('logoutUser:', typeof logoutUser);
+                        
                         if (typeof onAuthStateChange !== 'undefined' && 
                             typeof initSupabase !== 'undefined' && 
                             typeof registerUser !== 'undefined' && 
                             typeof loginUser !== 'undefined' && 
                             typeof logoutUser !== 'undefined') {
                             clearInterval(checkAuth);
+                            console.log('✅ Все функции auth.js инициализированы');
                             resolve();
                         }
-                    }, 100);
+                    }, 200); // Увеличиваем интервал проверки
                     
-                    // Таймаут на случай, если что-то пошло не так
+                    // Увеличиваем таймаут до 30 секунд
                     setTimeout(() => {
                         clearInterval(checkAuth);
-                        console.warn('⚠️ Таймаут ожидания auth.js, продолжаем...');
+                        console.warn('⚠️ Таймаут ожидания auth.js (30 сек), продолжаем...');
                         resolve();
-                    }, 10000);
+                    }, 30000);
                 });
                 console.log('✅ auth.js полностью инициализирован');
                 
