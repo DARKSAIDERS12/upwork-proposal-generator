@@ -106,8 +106,8 @@
                     <div id="subscriptionInfo"></div>
                 </div>
                 <div class="subscription-actions">
-                    <button  class="btn-upgrade" id="upgradeBtn">
-                        ��🚀 Обновить до Premium
+                    <button onclick="openSubscriptionManager()" class="btn-upgrade" id="upgradeBtn">
+                        �� Yandex GPT Premium
                     </button>
                     <button onclick="setupYandexGPTAPI()" class="btn-secondary" id="setupBtn" style="display: none;">
                         ⚙️ Настроить API
@@ -322,59 +322,47 @@
     <!-- Scripts -->
     <!-- Загружаем Supabase SDK с проверкой и fallback -->
     <script>
-        // Функция для загрузки Supabase SDK с расширенным fallback
+        // Функция для загрузки Supabase SDK с fallback
         function loadSupabaseSDK() {
             return new Promise((resolve, reject) => {
-                console.log("🔄 Начинаем загрузку Supabase SDK...");
+                console.log('🔄 Начинаем загрузку Supabase SDK...');
                 
-                // Список CDN для попыток загрузки
-                const cdnUrls = [
-                    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
-                    "https://unpkg.com/@supabase/supabase-js@2",
-                    "https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.38.4/umd/supabase.min.js",
-                    "https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2"
-                ];
+                // Пробуем основной CDN
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
                 
-                let currentIndex = 0;
+                script.onload = () => {
+                    console.log('✅ Supabase SDK загружен с основного CDN');
+                    resolve();
+                };
                 
-                function tryNextCDN() {
-                    if (currentIndex >= cdnUrls.length) {
-                        console.error("❌ Все CDN недоступны");
-                        reject(new Error("Не удалось загрузить Supabase SDK ни с одного CDN"));
-                        return;
-                    }
+                script.onerror = () => {
+                    console.log('⚠️ Основной CDN недоступен, пробуем альтернативный...');
                     
-                    const script = document.createElement("script");
-                    script.src = cdnUrls[currentIndex];
-                    console.log(`🔄 Пробуем CDN ${currentIndex + 1}: ${cdnUrls[currentIndex]}`);
+                    // Fallback на альтернативный CDN
+                    const fallbackScript = document.createElement('script');
+                    fallbackScript.src = 'https://unpkg.com/@supabase/supabase-js@2';
                     
-                    script.onload = () => {
-                        console.log(`✅ Supabase SDK загружен с CDN ${currentIndex + 1}`);
+                    fallbackScript.onload = () => {
+                        console.log('✅ Supabase SDK загружен с альтернативного CDN');
                         resolve();
                     };
                     
-                    script.onerror = () => {
-                        console.warn(`⚠️ CDN ${currentIndex + 1} недоступен, пробуем следующий...`);
-                        currentIndex++;
-                        tryNextCDN();
+                    fallbackScript.onerror = () => {
+                        console.log('❌ Оба CDN недоступны');
+                        reject(new Error('Не удалось загрузить Supabase SDK'));
                     };
                     
-                    // Таймаут для каждого CDN
-                    setTimeout(() => {
-                        if (script.parentNode) {
-                            script.parentNode.removeChild(script);
-                            console.warn(`⏰ Таймаут для CDN ${currentIndex + 1}`);
-                            currentIndex++;
-                            tryNextCDN();
-                        }
-                    }, 10000);
-                    
-                    document.head.appendChild(script);
-                }
+                    document.head.appendChild(fallbackScript);
+                };
                 
-                tryNextCDN();
+                document.head.appendChild(script);
             });
         }
+        
+        // Проверяем загрузку Supabase SDK
+        window.addEventListener('load', function() {
+            console.log('🚀 Страница загружена, начинаем инициализацию...');
             
             loadSupabaseSDK()
                 .then(() => {
@@ -430,9 +418,10 @@
                     targetBtn.classList.add('active');
                 }
             } catch (error) {
+                console.error('Ошибка в showTab:', error);
+            }
         }
         
-        // Функция ожидания загрузки Supabase SDK
         // Делаем функцию доступной глобально
         window.showTab = showTab;
         
@@ -470,9 +459,10 @@
                 showMainContent();
                 
             } catch (error) {
-        }
-        
-        // Функция ожидания загрузки Supabase SDK
+                console.error(`❌ Ошибка входа: ${error.message}`);
+                showNotification(`❌ Ошибка входа: ${error.message}`, "error");
+            }
+        };
         
         // Функция выхода - определяем сразу
         window.handleLogout = async function() {
@@ -498,12 +488,34 @@
                 showNotification('✅ Вы вышли из системы', 'success');
                 
             } catch (error) {
+                console.error('❌ Ошибка выхода:', error);
                 showNotification(`❌ Ошибка выхода: ${error.message}`, 'error');
+            }
+        };
+        
+        // Функция входа через GitHub - определяем сразу
+        window.handleGitHubLogin = async function() {
+            try {
+                console.log('🔄 Попытка входа через GitHub...');
+                
+                // Проверяем, что auth.js загружен
+                if (typeof signInWithGitHub === 'undefined') {
+                    showNotification('⏳ Система аутентификации еще не загружена. Подождите немного и попробуйте снова.', 'info');
+                    return;
+                }
+                
+                showNotification('🔄 Входим через GitHub...', 'info');
+                await signInWithGitHub();
+                
+            } catch (error) {
+                console.error('❌ Ошибка GitHub входа:', error);
+                showNotification(`❌ Ошибка входа через GitHub: ${error.message}`, 'error');
             }
         };
         
         // Функция регистрации - определяем сразу
         window.handleRegister = async function(event) {
+            event.preventDefault();
             console.log('🔄 Попытка регистрации...');
             
             try {
@@ -525,6 +537,57 @@
                 showNotification('🔄 Регистрируем...', 'info');
                 const user = await registerUser(email, password, email);
                 showNotification('✅ Регистрация успешна!', 'success');
+                
+                // Переключаемся на вкладку входа
+                console.log('🔄 Переключаемся на вкладку входа...');
+                showTab('login');
+                
+            } catch (error) {
+                console.error('❌ Ошибка регистрации:', error);
+                showNotification(`❌ Ошибка регистрации: ${error.message}`, 'error');
+            }
+        };
+        
+        // Функция входа - определяем сразу
+        window.handleLogin = async function(event) {
+            event.preventDefault();
+            console.log('🔄 Попытка входа...');
+            
+            try {
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                // Проверяем, что auth.js загружен
+                if (typeof loginUser === 'undefined') {
+                    showNotification('⏳ Система аутентификации еще не загружена. Подождите немного и попробуйте снова.', 'info');
+                    return;
+                }
+                
+                showNotification('🔄 Входим...', 'info');
+                const user = await loginUser(email, password);
+                showNotification('✅ Вход выполнен!', 'success');
+                
+                // Сохраняем пользователя и показываем основной контент
+                currentUser = user;
+                isAuthenticated = true;
+                console.log('👤 Пользователь сохранен:', currentUser);
+                console.log('🔐 isAuthenticated:', isAuthenticated);
+                
+                // Показываем основной контент
+                showMainContent();
+                
+            } catch (error) {
+                console.error('❌ Ошибка входа:', error);
+                showNotification(`❌ Ошибка входа: ${error.message}`, 'error');
+            }
+        };
+        
+        // Функции для работы с подписками
+        function openSubscriptionManager() {
+            // Проверяем, авторизован ли пользователь
+            if (!currentUser || !isAuthenticated) {
+                console.log('⚠️ Попытка открыть подписку без авторизации');
+                showNotification('⚠️ Сначала войдите в систему', 'warning');
                 return;
             }
             
@@ -573,10 +636,8 @@
         function upgradeToPremium() {
             console.log('🔄 Попытка обновления до Premium...');
             // Логика обновления до Premium
-            // Логика обновления до Premium
+            showNotification('💎 Функция обновления в разработке', 'info');
             closeUpgradeModal();
-            // Перенаправляем на страницу управления подписками
-            window.location.href = "subscription_manager.html";
         }
         
         // Функция GitHub входа - определяем сразу
@@ -604,10 +665,6 @@
                 showMainContent();
                 
             } catch (error) {
-        }
-        
-        // Функция ожидания загрузки Supabase SDK
-        function waitForSupabase() {
                 console.error('❌ Ошибка GitHub входа:', error);
                 showNotification(`❌ Ошибка входа через GitHub: ${error.message}`, 'error');
             }
@@ -668,10 +725,6 @@
                 console.log('🎉 showMainContent() завершена успешно');
                 
             } catch (error) {
-        }
-        
-        // Функция ожидания загрузки Supabase SDK
-        function waitForSupabase() {
                 console.error(`❌ Ошибка в showMainContent(): ${error.message}`);
             }
         }
@@ -680,87 +733,56 @@
             console.log('🔄 hideMainContent() вызвана');
             
             // Очищаем localStorage при выходе
+            localStorage.removeItem('user');
+            console.log('🗑️ Пользователь удален из localStorage');
+            
             try {
-                const authForms = document.getElementById("authForms");
-                const mainApp = document.getElementById("mainApp");
-                const userInfo = document.getElementById("userInfo");
+                const authForms = document.getElementById('authForms');
+                const mainApp = document.getElementById('mainApp');
+                const userInfo = document.getElementById('userInfo');
                 
                 if (authForms) {
-                    authForms.style.display = "block";
-                    console.log("✅ authForms показан");
+                    authForms.style.display = 'block';
+                    console.log('✅ authForms показан');
                 }
                 
                 if (mainApp) {
-                    mainApp.style.display = "none";
-                    console.log("✅ mainApp скрыт");
+                    mainApp.style.display = 'none';
+                    console.log('✅ mainApp скрыт');
                 }
                 
                 if (userInfo) {
-                    userInfo.style.display = "none";
-                    console.log("✅ userInfo скрыт");
+                    userInfo.style.display = 'none';
+                    console.log('✅ userInfo скрыт');
                 }
                 
-        // Функция ожидания загрузки Supabase SDK
+                console.log('🎉 hideMainContent() завершена успешно');
+                
             } catch (error) {
                 console.error(`❌ Ошибка в hideMainContent(): ${error.message}`);
             }
         }
+        
+        // Ждем загрузки Supabase SDK
         function waitForSupabase() {
             return new Promise((resolve) => {
-                if (typeof window.supabase !== "undefined") {
-                    console.log("✅ Supabase SDK уже загружен");
+                if (typeof window.supabase !== 'undefined') {
                     resolve();
-                    return;
-                }
-                
-                console.log("⏳ Ожидаем загрузки Supabase SDK...");
-                let attempts = 0;
-                const maxAttempts = 300; // 15 секунд при проверке каждые 50мс
-                
-                const checkInterval = setInterval(() => {
-                    attempts++;
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (typeof window.supabase !== 'undefined') {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 50);
                     
-                    if (typeof window.supabase !== "undefined") {
+                    // Таймаут на случай, если SDK не загрузится
+                    setTimeout(() => {
                         clearInterval(checkInterval);
-                        console.log(`✅ Supabase SDK загружен после ${attempts} попыток`);
+                        console.warn('⚠️ Таймаут ожидания Supabase SDK, продолжаем...');
                         resolve();
-                    } else if (attempts >= maxAttempts) {
-                        clearInterval(checkInterval);
-                        console.warn("⚠️ Таймаут ожидания Supabase SDK (15 сек), продолжаем...");
-                        resolve();
-                    }
-                }, 50);
-            });
-        }
-
-
-
-
-
-
-
-
-
-
+                    }, 15000);
                 }
-                
-                console.log("⏳ Ожидаем загрузки Supabase SDK...");
-                let attempts = 0;
-                const maxAttempts = 300; // 15 секунд при проверке каждые 50мс
-                
-                const checkInterval = setInterval(() => {
-                    attempts++;
-                    
-                    if (typeof window.supabase !== "undefined") {
-                        clearInterval(checkInterval);
-                        console.log(`✅ Supabase SDK загружен после ${attempts} попыток`);
-                        resolve();
-                    } else if (attempts >= maxAttempts) {
-                        clearInterval(checkInterval);
-                        console.warn("⚠️ Таймаут ожидания Supabase SDK (15 сек), продолжаем...");
-                        resolve();
-                    }
-                }, 50);
             });
         }
 
@@ -793,10 +815,6 @@
                 }
                 
             } catch (error) {
-        }
-        
-        // Функция ожидания загрузки Supabase SDK
-        function waitForSupabase() {
                 console.error('❌ Ошибка проверки состояния аутентификации:', error);
                 // При ошибке показываем формы входа
                 hideMainContent();
@@ -806,38 +824,29 @@
         // Загружаем скрипты после Supabase SDK
         async function loadRemainingScripts() {
             try {
-                console.log("⏳ Ждем загрузки Supabase SDK...");
+                console.log('⏳ Ждем загрузки Supabase SDK...');
                 await waitForSupabase();
-                
-                // Проверяем, действительно ли Supabase SDK загрузился
-                if (typeof window.supabase === "undefined") {
-                    console.warn("⚠️ Supabase SDK не загрузился, но продолжаем...");
-                    showNotification("⚠️ Проблема с загрузкой Supabase SDK. Некоторые функции могут не работать.", "warning");
-                } else {
-                    console.log("✅ Supabase SDK готов, загружаем остальные скрипты...");
-                }
+                console.log('✅ Supabase SDK готов, загружаем остальные скрипты...');
                 
                 // Загружаем auth.js
-                const authScript = document.createElement("script");
-                authScript.src = "auth.js";
+                const authScript = document.createElement('script');
+                authScript.src = 'auth.js';
                 document.body.appendChild(authScript);
                 
                 // Ждем загрузки auth.js
                 await new Promise((resolve) => {
                     authScript.onload = resolve;
-                    // Таймаут для auth.js
-                    setTimeout(resolve, 10000);
                 });
-                console.log("✅ auth.js загружен");
+                console.log('✅ auth.js загружен');
                 
                 // Ждем полной инициализации auth.js
                 await new Promise((resolve) => {
                     const checkAuth = setInterval(() => {
-                        if (typeof onAuthStateChange !== "undefined" && 
-                            typeof initSupabase !== "undefined" && 
-                            typeof registerUser !== "undefined" && 
-                            typeof loginUser !== "undefined" && 
-                            typeof logoutUser !== "undefined") {
+                        if (typeof onAuthStateChange !== 'undefined' && 
+                            typeof initSupabase !== 'undefined' && 
+                            typeof registerUser !== 'undefined' && 
+                            typeof loginUser !== 'undefined' && 
+                            typeof logoutUser !== 'undefined') {
                             clearInterval(checkAuth);
                             resolve();
                         }
@@ -874,10 +883,6 @@
                 showNotification('✅ Система аутентификации загружена!', 'success');
                 
             } catch (error) {
-        }
-        
-        // Функция ожидания загрузки Supabase SDK
-        function waitForSupabase() {
                 console.error('❌ Ошибка загрузки скриптов:', error);
                 
                 // Скрываем индикатор загрузки даже при ошибке
@@ -976,9 +981,8 @@
             if (selectPremiumBtn) {
                 selectPremiumBtn.addEventListener('click', () => {
                     console.log('🔄 Пользователь выбрал Premium план');
+                    showNotification('💎 Функция обновления в разработке', 'info');
                     closeUpgradeModal();
-                    // Перенаправляем на страницу управления подписками
-                    window.location.href = "subscription_manager.html";
                 });
             }
         }
