@@ -206,14 +206,30 @@
                     </div>
                     
                     <div class="pricing-card premium">
-                        <h3>Premium</h3>
+                        <h3>Pro</h3>
                         <div class="price">1 500 ₽<span>/мес</span></div>
                         <ul>
-                            <li>Неограниченные предложения</li>
+                            <li>50 предложений в день</li>
                             <li>Расширенные шаблоны</li>
-                            <li>Продвинутый AI (Yandex GPT)</li>
-                            <li>Приоритетная поддержка</li>
+                            <li>Базовый AI (Yandex GPT)</li>
+                            <li>Email поддержка</li>
                             <li>Экспорт предложений</li>
+                        </ul>
+                        <button id="selectProBtn" class="btn-primary">Выбрать Pro</button>
+                    </div>
+
+                    <div class="pricing-card premium">
+                        <h3>Premium</h3>
+                        <div class="price">3 000 ₽<span>/мес</span></div>
+                        <ul>
+                            <li>Неограниченные предложения</li>
+                            <li>Все шаблоны (включая эксклюзивные)</li>
+                            <li>Продвинутый AI (Yandex GPT + GigaChat)</li>
+                            <li>Приоритетная поддержка 24/7</li>
+                            <li>Расширенный экспорт (PDF, Word, Excel)</li>
+                            <li>Аналитика и статистика</li>
+                            <li>API доступ</li>
+                            <li>Персональный менеджер</li>
                         </ul>
                         <button id="selectPremiumBtn" class="btn-primary">Выбрать Premium</button>
                     </div>
@@ -1025,6 +1041,20 @@
             if (selectPremiumBtn) {
                 selectPremiumBtn.addEventListener('click', () => {
                     console.log('🔄 Пользователь выбрал Premium план');
+                    console.log('📍 Текущий URL:', window.location.href);
+                    console.log('🖥️ User Agent:', navigator.userAgent);
+                    console.log('📱 Платформа:', navigator.platform);
+                    closeUpgradeModal();
+                    console.log('🚀 Перенаправляем на subscription_manager.html...');
+                    window.location.href = 'subscription_manager.html';
+                });
+            }
+
+            // Обработчик для кнопки выбора Pro в модальном окне
+            const selectProBtn = document.getElementById('selectProBtn');
+            if (selectProBtn) {
+                selectProBtn.addEventListener('click', () => {
+                    console.log('🔄 Пользователь выбрал Pro план');
                     console.log('📍 Текущий URL:', window.location.href);
                     console.log('🖥️ User Agent:', navigator.userAgent);
                     console.log('📱 Платформа:', navigator.platform);
