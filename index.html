@@ -498,11 +498,6 @@
                 showNotification('✅ Вы вышли из системы', 'success');
                 
             } catch (error) {
-        }
-        
-        // Функция ожидания загрузки Supabase SDK
-        function waitForSupabase() {
-                console.error('❌ Ошибка выхода:', error);
                 showNotification(`❌ Ошибка выхода: ${error.message}`, 'error');
             }
         };
