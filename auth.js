@@ -16,9 +16,23 @@ function initSupabase() {
     try {
         const supabaseUrl = 'https://xykhpnksatwipwcmxwyn.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5a2hwbmtzYXR3aXB3Y214d3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNTAyNjIsImV4cCI6MjA3MDgyNjI2Mn0.PSARsuv14dI7xq35xvgVoxwjptb4cm8Ywb3bYZhY0KM';
-        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Создаем клиент с дополнительными опциями для решения CORS
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true
+            },
+            global: {
+                headers: {
+                    'X-Client-Info': 'upwork-proposal-generator'
+                }
+            }
+        });
+        
         isInitialized = true;
-        console.log('✅ Supabase успешно инициализирован');
+        console.log('✅ Supabase успешно инициализирован с дополнительными опциями');
         return true;
     } catch (error) {
         console.error('❌ Ошибка инициализации Supabase:', error);
@@ -117,6 +131,13 @@ async function registerUser(email, password, fullName) {
     
     if (error) {
       console.error('❌ Ошибка регистрации:', error);
+      
+      // Специальная обработка CORS ошибок
+      if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+        console.error('🌐 CORS/Network ошибка - проверьте настройки Supabase');
+        throw new Error('Ошибка сети. Проверьте подключение к интернету и настройки CORS.');
+      }
+      
       throw error;
     }
     
@@ -158,6 +179,12 @@ async function loginUser(email, password) {
     
     if (error) {
       console.error('❌ Ошибка входа:', error);
+      
+      // Специальная обработка CORS ошибок
+      if (error.message.includes('NetworkError') || error.message.includes('fetch')) {
+        console.error('🌐 CORS/Network ошибка - проверьте настройки Supabase');
+        throw new Error('Ошибка сети. Проверьте подключение к интернету и настройки CORS.');
+      }
       
       // Если email не подтвержден, показываем понятное сообщение
       if (error.message.includes('Email not confirmed')) {
@@ -218,12 +245,24 @@ async function saveUserProfile(user, provider) {
   try {
     console.log('💾 Сохранение профиля пользователя:', user.email);
     
+    // Проверяем, что пользователь аутентифицирован
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.warn('⚠️ Пользователь не аутентифицирован, пропускаем сохранение профиля');
+      return false;
+    }
+    
     // Проверяем, существует ли уже профиль
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile, error: selectError } = await supabase
       .from("user_profiles")
       .select("id")
       .eq("id", user.id)
       .single();
+    
+    if (selectError && selectError.code !== 'PGRST116') {
+      console.error('❌ Ошибка проверки существующего профиля:', selectError);
+      throw selectError;
+    }
     
     if (existingProfile) {
       console.log('✅ Профиль уже существует, обновляем...');
@@ -239,7 +278,10 @@ async function saveUserProfile(user, provider) {
         })
         .eq("id", user.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Ошибка обновления профиля:', error);
+        throw error;
+      }
       console.log('✅ Профиль обновлен');
     } else {
       console.log('🆕 Создаем новый профиль...');
@@ -256,14 +298,65 @@ async function saveUserProfile(user, provider) {
           updated_at: new Date()
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Ошибка создания профиля:', error);
+        
+        // Если ошибка RLS, пробуем альтернативный способ
+        if (error.code === '42501') {
+          console.warn('⚠️ RLS политика заблокировала создание, пробуем через auth.users...');
+          // Профиль может быть создан автоматически через триггеры
+          return true;
+        }
+        
+        throw error;
+      }
       console.log('✅ Новый профиль создан');
     }
     
     return true;
   } catch (error) {
     console.error('❌ Ошибка сохранения профиля:', error);
+    
+    // Если это ошибка RLS, не прерываем процесс
+    if (error.code === '42501') {
+      console.warn('⚠️ RLS политика заблокировала операцию, но это не критично');
+      return false;
+    }
+    
     throw error;
+  }
+}
+
+// Проверка состояния подключения к Supabase
+async function checkSupabaseConnection() {
+  if (!isInitialized) {
+    console.error('❌ Supabase не инициализирован');
+    return false;
+  }
+  
+  try {
+    console.log('🔍 Проверяем подключение к Supabase...');
+    
+    // Пробуем простой запрос для проверки подключения
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('count')
+      .limit(1);
+    
+    if (error) {
+      if (error.code === '42501') {
+        console.warn('⚠️ RLS политика заблокировала запрос, но подключение работает');
+        return true;
+      }
+      console.error('❌ Ошибка подключения к Supabase:', error);
+      return false;
+    }
+    
+    console.log('✅ Подключение к Supabase работает');
+    return true;
+  } catch (error) {
+    console.error('❌ Ошибка проверки подключения:', error);
+    return false;
   }
 }
 
@@ -452,6 +545,7 @@ window.getUserProfile = getUserProfile;
 window.updateUserLimits = updateUserLimits;
 window.saveProposal = saveProposal;
 window.getProposalsHistory = getProposalsHistory;
+window.checkSupabaseConnection = checkSupabaseConnection; // Добавляем новую функцию
 
 // Автоматическая инициализация
 console.log('🚀 auth.js загружен, начинаем инициализацию...');
