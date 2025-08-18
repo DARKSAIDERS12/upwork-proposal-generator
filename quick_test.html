@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Быстрый тест аутентификации</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f2f5;
+        }
+        .test-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .loading { background: #fff3cd; color: #856404; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-box">
+        <h1>🔐 Быстрый тест аутентификации</h1>
+        <p>Эта страница проверит, работает ли система аутентификации</p>
+        
+        <div id="status" class="status info">
+            <span class="spinner"></span>
+            Загружаем...
+        </div>
+        
+        <button onclick="runTest()" id="testBtn">Запустить тест</button>
+        <button onclick="checkAuth()" id="authBtn" disabled>Проверить аутентификацию</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Auth.js -->
+    <script src="auth.js"></script>
+    
+    <script>
+        let testStep = 0;
+        const totalSteps = 4;
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.innerHTML = message;
+        }
+        
+        function updateProgress() {
+            testStep++;
+            const percentage = Math.round((testStep / totalSteps) * 100);
+            console.log(`Прогресс: ${percentage}%`);
+        }
+        
+        async function runTest() {
+            testStep = 0;
+            const testBtn = document.getElementById('testBtn');
+            const authBtn = document.getElementById('authBtn');
+            
+            testBtn.disabled = true;
+            updateStatus('🔄 Запускаем тест...', 'loading');
+            
+            try {
+                // Шаг 1: Проверка Supabase SDK
+                updateStatus('🔍 Проверяем Supabase SDK...', 'loading');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (typeof createClient === 'undefined') {
+                    throw new Error('Supabase SDK не загружен');
+                }
+                updateStatus('✅ Supabase SDK загружен', 'success');
+                updateProgress();
+                
+                // Шаг 2: Проверка auth.js
+                updateStatus('🔍 Проверяем auth.js...', 'loading');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (typeof registerUser === 'undefined' || typeof loginUser === 'undefined') {
+                    throw new Error('Функции аутентификации не загружены');
+                }
+                updateStatus('✅ auth.js загружен', 'success');
+                updateProgress();
+                
+                // Шаг 3: Проверка инициализации
+                updateStatus('🔍 Проверяем инициализацию...', 'loading');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                if (typeof supabase === 'undefined' || supabase === null) {
+                    throw new Error('Supabase не инициализирован');
+                }
+                updateStatus('✅ Supabase инициализирован', 'success');
+                updateProgress();
+                
+                // Шаг 4: Финальная проверка
+                updateStatus('🔍 Финальная проверка...', 'loading');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                updateStatus('🎉 Все тесты пройдены успешно!', 'success');
+                updateProgress();
+                
+                // Активируем кнопку проверки аутентификации
+                authBtn.disabled = false;
+                
+            } catch (error) {
+                console.error('❌ Ошибка теста:', error);
+                updateStatus(`❌ Ошибка: ${error.message}`, 'error');
+            } finally {
+                testBtn.disabled = false;
+            }
+        }
+        
+        async function checkAuth() {
+            const result = document.getElementById('result');
+            result.innerHTML = '<div class="status loading">🔄 Проверяем аутентификацию...</div>';
+            
+            try {
+                if (typeof getCurrentUser === 'undefined') {
+                    throw new Error('Функция getCurrentUser недоступна');
+                }
+                
+                const user = await getCurrentUser();
+                if (user) {
+                    result.innerHTML = `<div class="status success">✅ Пользователь авторизован: ${user.email}</div>`;
+                } else {
+                    result.innerHTML = '<div class="status info">👤 Пользователь не авторизован</div>';
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="status error">❌ Ошибка: ${error.message}</div>`;
+            }
+        }
+        
+        // Автоматический запуск теста при загрузке
+        window.addEventListener('load', function() {
+            setTimeout(runTest, 1000);
+        });
+    </script>
+</body>
+</html>

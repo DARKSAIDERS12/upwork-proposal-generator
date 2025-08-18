@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест основной логики</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .hidden { display: none !important; }
+        .visible { display: block !important; }
+        button { padding: 10px 20px; margin: 5px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+        .log { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        .info { background-color: #d1ecf1; }
+        .auth-form { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .tab-btn { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        .tab-btn.active { background-color: #007bff; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Тест основной логики index.html</h1>
+    
+    <!-- Формы аутентификации -->
+    <div id="authForms" class="section">
+        <h2>🔐 Формы аутентификации</h2>
+        
+        <div class="auth-tabs">
+            <button class="tab-btn active" data-tab="login">Вход</button>
+            <button class="tab-btn" data-tab="register">Регистрация</button>
+        </div>
+        
+        <div id="loginForm" class="auth-form">
+            <h3>Вход в систему</h3>
+            <form id="loginFormElement">
+                <input type="email" id="loginEmail" placeholder="Email" value="test@example.com">
+                <input type="password" id="loginPassword" placeholder="Пароль" value="testpass123">
+                <button type="submit">Войти</button>
+            </form>
+        </div>
+        
+        <div id="registerForm" class="auth-form hidden">
+            <h3>Регистрация</h3>
+            <form id="registerFormElement">
+                <input type="email" id="registerEmail" placeholder="Email">
+                <input type="password" id="registerPassword" placeholder="Пароль">
+                <input type="password" id="confirmPassword" placeholder="Подтвердите пароль">
+                <button type="submit">Зарегистрироваться</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Основное приложение -->
+    <div id="mainApp" class="section hidden">
+        <h2>🎉 Личный кабинет</h2>
+        <p>Добро пожаловать в личный кабинет!</p>
+        <div id="userInfo">
+            <p>Email: <span id="userEmail">Не указан</span></p>
+        </div>
+        <button onclick="handleLogout()">Выйти</button>
+    </div>
+    
+    <!-- Тесты -->
+    <div class="section">
+        <h3>🧪 Тесты:</h3>
+        <button onclick="testShowMainContent()">Тест showMainContent()</button>
+        <button onclick="testHideMainContent()">Тест hideMainContent()</button>
+        <button onclick="testShowTab()">Тест showTab()</button>
+        <button onclick="checkVariables()">Проверить переменные</button>
+        <button onclick="clearLogs()">Очистить логи</button>
+    </div>
+    
+    <!-- Логи -->
+    <div class="section">
+        <h3>📊 Логи:</h3>
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        // Глобальные переменные
+        let currentUser = null;
+        let isAuthenticated = false;
+        
+        // Функция логирования
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logDiv = document.createElement('div');
+            logDiv.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.className = `${type} log`;
+            
+            const logsContainer = document.getElementById('logs');
+            logsContainer.appendChild(logDiv);
+            console.log(message);
+        }
+        
+        // Функции аутентификации
+        async function handleLogin(event) {
+            event.preventDefault();
+            log('🔄 Начинаем вход...', 'info');
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                log('❌ Заполните все поля', 'error');
+                return;
+            }
+            
+            try {
+                // Симулируем успешный вход
+                log('✅ Вход выполнен успешно!', 'success');
+                
+                // Создаем пользователя
+                currentUser = {
+                    email: email,
+                    id: 'test-user-' + Date.now(),
+                    created_at: new Date().toISOString()
+                };
+                isAuthenticated = true;
+                
+                log(`👤 Пользователь создан: ${JSON.stringify(currentUser)}`, 'success');
+                log(`🔐 isAuthenticated: ${isAuthenticated}`, 'success');
+                
+                // Показываем основной контент
+                showMainContent();
+                
+            } catch (error) {
+                log(`❌ Ошибка входа: ${error.message}`, 'error');
+            }
+        }
+        
+        async function handleRegister(event) {
+            event.preventDefault();
+            log('🔄 Начинаем регистрацию...', 'info');
+            
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!email || !password || !confirmPassword) {
+                log('❌ Заполните все поля', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                log('❌ Пароли не совпадают', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                log('❌ Пароль должен содержать минимум 6 символов', 'error');
+                return;
+            }
+            
+            try {
+                log('✅ Регистрация успешна!', 'success');
+                showTab('login');
+                
+            } catch (error) {
+                log(`❌ Ошибка регистрации: ${error.message}`, 'error');
+            }
+        }
+        
+        async function handleLogout() {
+            log('🔄 Выход из системы...', 'info');
+            
+            currentUser = null;
+            isAuthenticated = false;
+            
+            log('✅ Выход выполнен', 'success');
+            hideMainContent();
+        }
+        
+        // Функции переключения контента (скопированы из index.html)
+        function showMainContent() {
+            log('🔄 showMainContent() вызвана', 'info');
+            log(`📧 currentUser: ${currentUser ? currentUser.email : 'null'}`, 'info');
+            log(`🔐 isAuthenticated: ${isAuthenticated}`, 'info');
+            
+            try {
+                const authForms = document.getElementById('authForms');
+                const mainApp = document.getElementById('mainApp');
+                const userInfo = document.getElementById('userInfo');
+                const userEmail = document.getElementById('userEmail');
+                
+                log('🔍 Найденные элементы:', 'info');
+                log(`- authForms: ${authForms ? 'найден' : 'НЕ НАЙДЕН'}`, authForms ? 'success' : 'error');
+                log(`- mainApp: ${mainApp ? 'найден' : 'НЕ НАЙДЕН'}`, mainApp ? 'success' : 'error');
+                log(`- userInfo: ${userInfo ? 'найден' : 'НЕ НАЙДЕН'}`, userInfo ? 'success' : 'error');
+                log(`- userEmail: ${userEmail ? 'найден' : 'НЕ НАЙДЕН'}`, userEmail ? 'success' : 'error');
+                
+                if (authForms) {
+                    authForms.style.display = 'none';
+                    log('✅ authForms скрыт', 'success');
+                } else {
+                    log('❌ authForms не найден', 'error');
+                }
+                
+                if (mainApp) {
+                    mainApp.style.display = 'block';
+                    log('✅ mainApp показан', 'success');
+                } else {
+                    log('❌ mainApp не найден', 'error');
+                }
+                
+                if (userInfo) {
+                    userInfo.style.display = 'block';
+                    log('✅ userInfo показан', 'success');
+                } else {
+                    log('❌ userInfo не найден', 'error');
+                }
+                
+                if (userEmail && currentUser) {
+                    userEmail.textContent = currentUser.email;
+                    log(`✅ userEmail обновлен: ${userEmail.textContent}`, 'success');
+                } else {
+                    log('❌ userEmail не найден или currentUser пустой', 'error');
+                }
+                
+                log('🎉 showMainContent() завершена успешно', 'success');
+                
+            } catch (error) {
+                log(`❌ Ошибка в showMainContent(): ${error.message}`, 'error');
+            }
+        }
+        
+        function hideMainContent() {
+            log('🔄 hideMainContent() вызвана', 'info');
+            
+            try {
+                const authForms = document.getElementById('authForms');
+                const mainApp = document.getElementById('mainApp');
+                const userInfo = document.getElementById('userInfo');
+                
+                if (authForms) {
+                    authForms.style.display = 'block';
+                    log('✅ authForms показан', 'success');
+                }
+                
+                if (mainApp) {
+                    mainApp.style.display = 'none';
+                    log('✅ mainApp скрыт', 'success');
+                }
+                
+                if (userInfo) {
+                    userInfo.style.display = 'none';
+                    log('✅ userInfo скрыт', 'success');
+                }
+                
+                log('🎉 hideMainContent() завершена успешно', 'success');
+                
+            } catch (error) {
+                log(`❌ Ошибка в hideMainContent(): ${error.message}`, 'error');
+            }
+        }
+        
+        // Функция переключения вкладок (скопирована из index.html)
+        function showTab(tabName) {
+            log(`🔄 Переключение на вкладку: ${tabName}`, 'info');
+            
+            try {
+                // Скрываем все формы
+                const forms = document.querySelectorAll('.auth-form');
+                forms.forEach(form => {
+                    form.style.display = 'none';
+                });
+                
+                // Показываем нужную форму
+                const targetForm = document.getElementById(tabName + 'Form');
+                if (targetForm) {
+                    targetForm.style.display = 'block';
+                    log(`✅ Показана форма: ${tabName}`, 'success');
+                } else {
+                    log(`❌ Форма не найдена: ${tabName}`, 'error');
+                }
+                
+                // Обновляем активную вкладку
+                const buttons = document.querySelectorAll('.tab-btn');
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // Находим кнопку по data-tab
+                const targetBtn = document.querySelector(`[data-tab="${tabName}"]`);
+                if (targetBtn) {
+                    targetBtn.classList.add('active');
+                    log(`✅ Активирована кнопка: ${tabName}`, 'success');
+                } else {
+                    log(`❌ Кнопка не найдена: ${tabName}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Ошибка в showTab(): ${error.message}`, 'error');
+            }
+        }
+        
+        // Тестовые функции
+        function testShowMainContent() {
+            log('🧪 Тестируем showMainContent()...', 'info');
+            currentUser = { email: 'test@example.com', id: 'test' };
+            isAuthenticated = true;
+            showMainContent();
+        }
+        
+        function testHideMainContent() {
+            log('🧪 Тестируем hideMainContent()...', 'info');
+            hideMainContent();
+        }
+        
+        function testShowTab() {
+            log('🧪 Тестируем showTab()...', 'info');
+            showTab('register');
+            setTimeout(() => showTab('login'), 2000);
+        }
+        
+        function checkVariables() {
+            log('📊 Проверяем переменные...', 'info');
+            log(`👤 currentUser: ${currentUser ? JSON.stringify(currentUser) : 'null'}`, 'info');
+            log(`🔐 isAuthenticated: ${isAuthenticated}`, 'info');
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+            log('🧹 Логи очищены', 'info');
+        }
+        
+        // Обработчики событий
+        document.getElementById('loginFormElement').addEventListener('submit', handleLogin);
+        document.getElementById('registerFormElement').addEventListener('submit', handleRegister);
+        
+        // Инициализация
+        log('🚀 Тестовая страница загружена', 'success');
+        log('📋 Готов к тестированию основной логики', 'info');
+        showTab('login');
+    </script>
+</body>
+</html>
+
+
+

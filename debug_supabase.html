@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Supabase SDK</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Диагностика Supabase SDK</h1>
+    
+    <div class="debug-section info">
+        <h3>📋 Информация</h3>
+        <p>Эта страница поможет диагностировать проблемы с загрузкой Supabase SDK.</p>
+        <p><strong>Текущий URL:</strong> <span id="currentUrl"></span></p>
+    </div>
+
+    <div class="debug-section">
+        <h3>🚀 Тест загрузки Supabase SDK</h3>
+        <button onclick="testSupabaseLoading()">Тест загрузки SDK</button>
+        <button onclick="testAlternativeCDN()">Тест альтернативного CDN</button>
+        <div id="sdkTest" class="log"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>🔐 Тест создания клиента</h3>
+        <button onclick="testClientCreation()">Тест создания клиента</button>
+        <div id="clientTest" class="log"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>🌐 Тест сетевого соединения</h3>
+        <button onclick="testNetworkConnection()">Тест сети</button>
+        <div id="networkTest" class="log"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>📱 Открыть основную страницу</h3>
+        <button onclick="openMainPage()">Открыть index.html</button>
+        <p><em>Откроет основную страницу для сравнения</em></p>
+    </div>
+
+    <script>
+        // Показываем текущий URL
+        document.getElementById('currentUrl').textContent = window.location.href;
+
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function testSupabaseLoading() {
+            const logElement = document.getElementById('sdkTest');
+            logElement.textContent = '';
+            
+            log(logElement, '🔍 Тестируем загрузку Supabase SDK...');
+            
+            // Проверяем текущий статус
+            if (typeof window.supabase !== 'undefined') {
+                log(logElement, '✅ window.supabase уже доступен');
+                log(logElement, `📦 Версия: ${window.supabase?.version || 'неизвестна'}`);
+            } else {
+                log(logElement, '❌ window.supabase не доступен');
+            }
+            
+            if (typeof createClient !== 'undefined') {
+                log(logElement, '✅ createClient доступен');
+            } else {
+                log(logElement, '❌ createClient не доступен');
+            }
+            
+            // Пробуем загрузить SDK
+            log(logElement, '🔄 Пробуем загрузить SDK...');
+            
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.onload = () => {
+                log(logElement, '✅ SDK загружен успешно');
+                if (typeof window.supabase !== 'undefined') {
+                    log(logElement, '✅ window.supabase доступен после загрузки');
+                }
+                if (typeof createClient !== 'undefined') {
+                    log(logElement, '✅ createClient доступен после загрузки');
+                }
+            };
+            script.onerror = (error) => {
+                log(logElement, `❌ Ошибка загрузки SDK: ${error}`);
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        function testAlternativeCDN() {
+            const logElement = document.getElementById('sdkTest');
+            log(logElement, '🔄 Тестируем альтернативный CDN...');
+            
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/@supabase/supabase-js@2';
+            script.onload = () => {
+                log(logElement, '✅ Альтернативный CDN загружен успешно');
+            };
+            script.onerror = (error) => {
+                log(logElement, `❌ Ошибка альтернативного CDN: ${error}`);
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        function testClientCreation() {
+            const logElement = document.getElementById('clientTest');
+            logElement.textContent = '';
+            
+            log(logElement, '🔐 Тестируем создание Supabase клиента...');
+            
+            if (typeof window.supabase === 'undefined') {
+                log(logElement, '❌ window.supabase не доступен');
+                return;
+            }
+            
+            try {
+                const supabaseUrl = 'https://xykhpnksatwipwcmxwyn.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh5a2hwbmtzYXR3aXB3Y214d3luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTUyNTAyNjIsImV4cCI6MjA3MDgyNjI2Mn0.PSARsuv14dI7xq35xvgVoxwjptb4cm8Ywb3bYZhY0KM';
+                
+                log(logElement, '🔄 Создаем клиент...');
+                const client = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                log(logElement, '✅ Клиент создан успешно');
+                log(logElement, `📊 Тип клиента: ${typeof client}`);
+                log(logElement, `🔑 URL: ${supabaseUrl}`);
+                
+                // Тестируем простой запрос
+                log(logElement, '🔄 Тестируем подключение к базе...');
+                client.from('user_profiles').select('count').limit(1)
+                    .then(result => {
+                        if (result.error) {
+                            log(logElement, `❌ Ошибка подключения: ${result.error.message}`);
+                        } else {
+                            log(logElement, '✅ Подключение к базе успешно');
+                        }
+                    })
+                    .catch(error => {
+                        log(logElement, `❌ Ошибка запроса: ${error.message}`);
+                    });
+                
+            } catch (error) {
+                log(logElement, `❌ Ошибка создания клиента: ${error.message}`);
+            }
+        }
+
+        function testNetworkConnection() {
+            const logElement = document.getElementById('networkTest');
+            logElement.textContent = '';
+            
+            log(logElement, '🌐 Тестируем сетевое соединение...');
+            
+            // Тест 1: CDN Supabase
+            fetch('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2')
+                .then(response => {
+                    if (response.ok) {
+                        log(logElement, '✅ CDN Supabase доступен');
+                    } else {
+                        log(logElement, `❌ CDN Supabase недоступен: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    log(logElement, `❌ Ошибка CDN Supabase: ${error.message}`);
+                });
+            
+            // Тест 2: Альтернативный CDN
+            fetch('https://unpkg.com/@supabase/supabase-js@2')
+                .then(response => {
+                    if (response.ok) {
+                        log(logElement, '✅ Альтернативный CDN доступен');
+                    } else {
+                        log(logElement, `❌ Альтернативный CDN недоступен: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    log(logElement, `❌ Ошибка альтернативного CDN: ${error.message}`);
+                });
+            
+            // Тест 3: Supabase API
+            fetch('https://xykhpnksatwipwcmxwyn.supabase.co/rest/v1/')
+                .then(response => {
+                    if (response.status === 401) {
+                        log(logElement, '✅ Supabase API доступен (401 - ожидаемо без ключа)');
+                    } else {
+                        log(logElement, `⚠️ Supabase API ответ: ${response.status}`);
+                    }
+                })
+                .catch(error => {
+                    log(logElement, `❌ Ошибка Supabase API: ${error.message}`);
+                });
+        }
+
+        function openMainPage() {
+            window.open('index.html', '_blank');
+        }
+
+        // Автоматический тест при загрузке
+        window.addEventListener('load', () => {
+            log('sdkTest', '🔄 Автоматический тест при загрузке...');
+            setTimeout(() => {
+                testSupabaseLoading();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

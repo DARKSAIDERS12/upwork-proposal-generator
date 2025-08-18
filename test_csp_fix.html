@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: http:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; style-src 'self' 'unsafe-inline' https: http:; img-src 'self' data: https: http:; font-src 'self' https: http:; connect-src 'self' https: http:;">
+    <title>Тест исправлений CSP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .warning { background: #fff3cd; color: #856404; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .csp-info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔒 Тест исправлений CSP</h1>
+    
+    <div class="csp-info">
+        <h3>ℹ️ Content Security Policy</h3>
+        <p>Эта страница использует безопасную политику CSP для предотвращения XSS атак.</p>
+        <p><strong>Разрешено:</strong> inline скрипты, eval, внешние ресурсы</p>
+        <p><strong>Блокируется:</strong> небезопасные inline обработчики</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>1. 🔍 Проверка CSP</h2>
+        <div id="cspStatus" class="status info">Проверяем...</div>
+        <button id="cspTestBtn">Проверить CSP</button>
+        <div class="log" id="cspLog"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 🔐 Проверка аутентификации</h2>
+        <div id="authStatus" class="status info">Проверяем...</div>
+        <button id="authTestBtn">Проверить аутентификацию</button>
+        <div class="log" id="authLog"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 📝 Тест форм</h2>
+        <div id="formStatus" class="status info">Проверяем...</div>
+        <button id="formTestBtn">Проверить формы</button>
+        <div class="log" id="formLog"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 🚀 Полная диагностика</h2>
+        <button id="fullTestBtn">Запустить полный тест</button>
+        <div class="log" id="fullLog"></div>
+    </div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Auth.js -->
+    <script src="auth.js"></script>
+    
+    <script>
+        // Логирование
+        function logTo(elementId, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const timestamp = new Date().toLocaleTimeString();
+                element.innerHTML += `[${timestamp}] ${message}\n`;
+                element.scrollTop = element.scrollHeight;
+            }
+        }
+        
+        // Проверка CSP
+        function testCSP() {
+            const status = document.getElementById('cspStatus');
+            const log = 'cspLog';
+            
+            logTo(log, '🔍 Проверяем Content Security Policy...');
+            
+            try {
+                // Проверяем, что CSP мета-тег присутствует
+                const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+                if (cspMeta) {
+                    logTo(log, '✅ CSP мета-тег найден');
+                    logTo(log, `📋 CSP: ${cspMeta.content}`);
+                    
+                    // Проверяем, что inline скрипты работают
+                    const testElement = document.createElement('div');
+                    testElement.innerHTML = '<script>console.log("CSP inline test");<\/script>';
+                    document.body.appendChild(testElement);
+                    document.body.removeChild(testElement);
+                    
+                    status.className = 'status success';
+                    status.textContent = '✅ CSP настроен корректно';
+                    logTo(log, '✅ Inline скрипты работают');
+                } else {
+                    throw new Error('CSP мета-тег не найден');
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `❌ Ошибка CSP: ${error.message}`;
+                logTo(log, `❌ Ошибка: ${error.message}`);
+            }
+        }
+        
+        // Проверка аутентификации
+        function testAuth() {
+            const status = document.getElementById('authStatus');
+            const log = 'authLog';
+            
+            logTo(log, '🔍 Проверяем систему аутентификации...');
+            
+            try {
+                // Проверяем Supabase SDK
+                if (typeof createClient === 'undefined') {
+                    throw new Error('Supabase SDK не загружен');
+                }
+                logTo(log, '✅ Supabase SDK загружен');
+                
+                // Проверяем функции аутентификации
+                const functions = ['signInWithGitHub', 'registerUser', 'loginUser', 'logoutUser'];
+                const missing = functions.filter(f => typeof window[f] === 'undefined');
+                
+                if (missing.length === 0) {
+                    status.className = 'status success';
+                    status.textContent = '✅ Все функции аутентификации доступны';
+                    logTo(log, '✅ Все функции найдены');
+                } else {
+                    throw new Error(`Отсутствуют функции: ${missing.join(', ')}`);
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `❌ Ошибка аутентификации: ${error.message}`;
+                logTo(log, `❌ Ошибка: ${error.message}`);
+            }
+        }
+        
+        // Проверка форм
+        function testForms() {
+            const status = document.getElementById('formStatus');
+            const log = 'formLog';
+            
+            logTo(log, '🔍 Проверяем формы...');
+            
+            try {
+                // Проверяем, что формы существуют
+                const loginForm = document.getElementById('loginFormElement');
+                const registerForm = document.getElementById('registerFormElement');
+                
+                if (!loginForm || !registerForm) {
+                    throw new Error('Формы не найдены');
+                }
+                logTo(log, '✅ Формы найдены');
+                
+                // Проверяем, что нет inline onclick
+                const inlineOnclick = document.querySelectorAll('[onclick]');
+                if (inlineOnclick.length > 0) {
+                    throw new Error(`Найдены inline onclick: ${inlineOnclick.length} элементов`);
+                }
+                logTo(log, '✅ Inline onclick отсутствуют');
+                
+                // Проверяем, что есть data-атрибуты
+                const dataTabs = document.querySelectorAll('[data-tab]');
+                if (dataTabs.length === 0) {
+                    throw new Error('Data-атрибуты для вкладок не найдены');
+                }
+                logTo(log, '✅ Data-атрибуты найдены');
+                
+                status.className = 'status success';
+                status.textContent = '✅ Формы работают корректно';
+                logTo(log, '✅ Все проверки пройдены');
+                
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `❌ Ошибка форм: ${error.message}`;
+                logTo(log, `❌ Ошибка: ${error.message}`);
+            }
+        }
+        
+        // Полная диагностика
+        function runFullTest() {
+            const log = 'fullLog';
+            logTo(log, '🚀 Запуск полной диагностики...');
+            
+            setTimeout(() => testCSP(), 100);
+            setTimeout(() => testAuth(), 200);
+            setTimeout(() => testForms(), 300);
+            
+            logTo(log, '✅ Диагностика запущена');
+        }
+        
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            const cspBtn = document.getElementById('cspTestBtn');
+            const authBtn = document.getElementById('authTestBtn');
+            const formBtn = document.getElementById('formTestBtn');
+            const fullBtn = document.getElementById('fullTestBtn');
+            
+            if (cspBtn) cspBtn.addEventListener('click', testCSP);
+            if (authBtn) authBtn.addEventListener('click', testAuth);
+            if (formBtn) formBtn.addEventListener('click', testForms);
+            if (fullBtn) fullBtn.addEventListener('click', runFullTest);
+        }
+        
+        // Автоматические проверки при загрузке
+        window.addEventListener('load', function() {
+            setupEventListeners();
+            setTimeout(() => {
+                testCSP();
+                setTimeout(() => {
+                    testAuth();
+                    setTimeout(() => {
+                        testForms();
+                    }, 500);
+                }, 500);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

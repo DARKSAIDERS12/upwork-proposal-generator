@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: http:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: http:; style-src 'self' 'unsafe-inline' https: http:; img-src 'self' data: https: http:; font-src 'self' https: http:; connect-src 'self' https: http:;">
+    <title>Upwork Proposal Generator - Генератор предложений</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <h1>🚀 Upwork Proposal Generator</h1>
+                <p>Создавайте убедительные предложения с помощью AI</p>
+            </div>
+            <div class="user-info" id="userInfo" style="display: none;">
+                <span id="userEmail"></span>
+                <a href="subscription_manager.html" class="btn-secondary">⚙️ Управление подпиской</a>
+                <a href="yandex_gpt_setup.html" class="btn-secondary">🤖 Настройка API</a>
+                <button onclick="handleLogout()" class="btn-secondary">Выйти</button>
+            </div>
+        </header>
+
+        <!-- Auth Forms -->
+        <div id="authForms" class="auth-section">
+            <div class="auth-container">
+                <!-- Индикатор загрузки -->
+                <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Загрузка системы аутентификации...</p>
+                </div>
+                
+                <div class="auth-tabs">
+                    <button class="tab-btn active" data-tab="login">Вход</button>
+                    <button class="tab-btn" data-tab="register">Регистрация</button>
+                </div>
+                
+                <!-- Quick Links -->
+                <div class="quick-links">
+                    <a href="subscription_manager.html" class="quick-link">💰 Тарифы и подписки</a>
+                    <a href="yandex_gpt_setup.html" class="quick-link">🤖 Настройка Yandex GPT</a>
+                </div>
+                
+                <!-- GitHub Login Button -->
+                <div class="github-login">
+                    <button class="github-btn" id="githubLoginBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        Войти через GitHub
+                    </button>
+                    <div class="divider">или</div>
+                </div>
+                
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form">
+                    <h2>Вход в систему</h2>
+                    <form id="loginFormElement">
+                        <div class="form-group">
+                            <label for="loginEmail">Email:</label>
+                            <input type="email" id="loginEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Пароль:</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Войти</button>
+                    </form>
+                </div>
+                
+                <!-- Register Form -->
+                <div id="registerForm" class="auth-form" style="display: none;">
+                    <h2>Регистрация</h2>
+                    <form id="registerFormElement">
+                        <div class="form-group">
+                            <label for="registerEmail">Email:</label>
+                            <input type="email" id="registerEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="registerPassword">Пароль (минимум 6 символов):</label>
+                            <input type="password" id="registerPassword" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Подтвердите пароль:</label>
+                            <input type="password" id="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Зарегистрироваться</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="mainApp" class="main-app" style="display: none;">
+            <!-- Subscription Status -->
+            <div class="subscription-status" id="subscriptionStatus">
+                <div class="subscription-info">
+                    <h3>💳 Ваша подписка</h3>
+                    <div class="subscription-details">
+                        <span id="subscriptionType">Бесплатная (Демо)</span>
+                        <span id="aiProvider">AI: Демо-режим</span>
+                        <span id="dailyRemaining">Осталось: 3 предложения</span>
+                    </div>
+                    <div id="subscriptionInfo"></div>
+                </div>
+                <div class="subscription-actions">
+                    <button onclick="openSubscriptionManager()" class="btn-upgrade" id="upgradeBtn">
+                        💎 Yandex GPT Premium
+                    </button>
+                    <button onclick="setupYandexGPTAPI()" class="btn-secondary" id="setupBtn" style="display: none;">
+                        ⚙️ Настроить API
+                    </button>
+                </div>
+            </div>
+
+            <!-- Proposal Generator -->
+            <div class="generator-section">
+                <h2>Генератор предложений</h2>
+                <form id="proposalForm" onsubmit="generateProposal(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="projectTitle">Название проекта:</label>
+                            <input type="text" id="projectTitle" required placeholder="Например: Website Development">
+                        </div>
+                        <div class="form-group">
+                            <label for="projectBudget">Бюджет:</label>
+                            <input type="text" id="projectBudget" required placeholder="Например: $1000-2000">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="projectDescription">Описание проекта:</label>
+                        <textarea id="projectDescription" required placeholder="Опишите проект подробно..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="specialization">Специализация:</label>
+                            <select id="specialization" required>
+                                <option value="">Выберите специализацию</option>
+                                <option value="Web Development">Веб-разработка</option>
+                                <option value="Mobile Development">Мобильная разработка</option>
+                                <option value="Graphic Design">Графический дизайн</option>
+                                <option value="Content Writing">Написание контента</option>
+                                <option value="Digital Marketing">Цифровой маркетинг</option>
+                                <option value="Data Entry">Ввод данных</option>
+                                <option value="Translation">Перевод</option>
+                                <option value="Virtual Assistant">Виртуальный помощник</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="tone">Тон предложения:</label>
+                            <select id="tone" required>
+                                <option value="Professional">Профессиональный</option>
+                                <option value="Friendly">Дружелюбный</option>
+                                <option value="Formal">Формальный</option>
+                                <option value="Creative">Креативный</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn-generate">Сгенерировать предложение</button>
+                </form>
+            </div>
+
+            <!-- Generated Proposal -->
+            <div id="proposalResult" class="proposal-result" style="display: none;">
+                <h3>Сгенерированное предложение:</h3>
+                <div class="proposal-content" id="proposalContent"></div>
+                <div class="proposal-actions">
+                    <button onclick="copyProposal()" class="btn-secondary">Копировать</button>
+                    <button onclick="saveProposal()" class="btn-secondary">Сохранить</button>
+                    <button onclick="generateNew()" class="btn-primary">Сгенерировать новое</button>
+                </div>
+            </div>
+
+            <!-- Proposals History -->
+            <div class="history-section">
+                <h3>История предложений</h3>
+                <div id="proposalsHistory" class="proposals-list">
+                    <!-- История будет загружаться здесь -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Upgrade Modal -->
+        <div id="upgradeModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeUpgradeModal()">&times;</span>
+                <h2>Обновите до Premium</h2>
+                
+                <div class="pricing-cards">
+                    <div class="pricing-card">
+                        <h3>Бесплатная версия</h3>
+                        <div class="price">0 ₽</div>
+                        <ul>
+                            <li>3 предложения в день</li>
+                            <li>Базовые шаблоны</li>
+                            <li>Демо-режим AI</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-card premium">
+                        <h3>Premium</h3>
+                        <div class="price">299 ₽/мес</div>
+                        <ul>
+                            <li>Неограниченные предложения</li>
+                            <li>Yandex GPT API</li>
+                            <li>Продвинутые шаблоны</li>
+                            <li>Приоритетная поддержка</li>
+                        </ul>
+                        <button onclick="upgradeToPremium()" class="btn-upgrade">Обновиться</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомления -->
+    <div id="notifications"></div>
+
+    <script>
+        // Глобальные переменные
+        let currentUser = null;
+        let isAuthenticated = false;
+
+        // Показываем уведомление
+        function showNotification(message, type = 'info') {
+            const notifications = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            notifications.appendChild(notification);
+            
+            // Автоматически удаляем через 5 секунд
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+
+        // Показываем/скрываем индикатор загрузки
+        function showLoadingIndicator() {
+            document.getElementById('loadingIndicator').style.display = 'flex';
+        }
+
+        function hideLoadingIndicator() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        // Переключение между вкладками
+        function showTab(tabName) {
+            // Скрываем все формы
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Убираем активный класс со всех кнопок
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Показываем нужную форму и активируем кнопку
+            document.getElementById(tabName + 'Form').style.display = 'block';
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        }
+
+        // Обработчик регистрации
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!email || !password || !confirmPassword) {
+                showNotification('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+            
+            // Проверяем длину пароля
+            if (password.length < 6) {
+                showNotification('❌ Пароль должен содержать минимум 6 символов', 'error');
+                return;
+            }
+            
+            // Проверяем совпадение паролей
+            if (password !== confirmPassword) {
+                showNotification('❌ Пароли не совпадают', 'error');
+                return;
+            }
+            
+            showLoadingIndicator();
+            
+            try {
+                // Проверяем, что auth.js загружен
+                if (typeof registerUser === 'undefined') {
+                    showNotification('⏳ Система аутентификации еще не загружена. Подождите немного и попробуйте снова.', 'info');
+                    return;
+                }
+                
+                showNotification('🔄 Регистрируем...', 'info');
+                const user = await registerUser(email, password, email);
+                
+                hideLoadingIndicator();
+                showNotification('✅ Регистрация успешна! Проверьте email для подтверждения.', 'success');
+                console.log('Пользователь зарегистрирован:', user);
+                
+                // Переключаемся на вкладку входа
+                showTab('login');
+                
+            } catch (error) {
+                hideLoadingIndicator();
+                showNotification('Ошибка регистрации: ' + error.message, 'error');
+                console.error('Ошибка регистрации:', error);
+            }
+        }
+
+        // Обработчик входа
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showNotification('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+            
+            showLoadingIndicator();
+            
+            try {
+                // Проверяем, что auth.js загружен
+                if (typeof loginUser === 'undefined') {
+                    showNotification('⏳ Система аутентификации еще не загружена. Подождите немного и попробуйте снова.', 'info');
+                    return;
+                }
+                
+                showNotification('🔄 Входим...', 'info');
+                const user = await loginUser(email, password);
+                
+                hideLoadingIndicator();
+                showNotification('✅ Вход выполнен!', 'success');
+                
+                // Сохраняем пользователя и показываем основной контент
+                currentUser = user;
+                isAuthenticated = true;
+                showMainContent();
+                
+            } catch (error) {
+                hideLoadingIndicator();
+                showNotification('Ошибка входа: ' + error.message, 'error');
+                console.error('Ошибка входа:', error);
+            }
+        }
+
+        // GitHub вход
+        async function handleGitHubLogin() {
+            try {
+                if (typeof signInWithGitHub === 'undefined') {
+                    showNotification('⏳ Система аутентификации еще не загружена. Подождите немного и попробуйте снова.', 'info');
+                    return;
+                }
+                
+                showNotification('🔄 Входим через GitHub...', 'info');
+                await signInWithGitHub();
+                
+            } catch (error) {
+                showNotification('Ошибка входа через GitHub: ' + error.message, 'error');
+                console.error('Ошибка GitHub входа:', error);
+            }
+        }
+
+        // Выход
+        async function handleLogout() {
+            try {
+                if (typeof logoutUser === 'undefined') {
+                    showNotification('⏳ Система аутентификации еще не загружена.', 'info');
+                    return;
+                }
+                
+                await logoutUser();
+                currentUser = null;
+                isAuthenticated = false;
+                hideMainContent();
+                showNotification('✅ Вы вышли из системы', 'success');
+                
+            } catch (error) {
+                showNotification('Ошибка выхода: ' + error.message, 'error');
+                console.error('Ошибка выхода:', error);
+            }
+        }
+
+        // Показываем основной контент
+        function showMainContent() {
+            document.getElementById('authForms').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('userEmail').textContent = currentUser?.email || 'Пользователь';
+        }
+
+        // Скрываем основной контент
+        function hideMainContent() {
+            document.getElementById('authForms').style.display = 'block';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+        }
+
+        // Генерация предложения (демо-режим)
+        function generateProposal(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById('projectTitle').value;
+            const budget = document.getElementById('projectBudget').value;
+            const description = document.getElementById('projectDescription').value;
+            const specialization = document.getElementById('specialization').value;
+            const tone = document.getElementById('tone').value;
+            
+            if (!title || !budget || !description || !specialization || !tone) {
+                showNotification('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+            
+            // Генерируем демо-предложение
+            const proposal = `Уважаемый клиент!
+
+Я заинтересован в вашем проекте "${title}" с бюджетом ${budget}.
+
+${description}
+
+Как специалист в области ${specialization}, я готов выполнить этот проект качественно и в срок. Мой подход ${tone.toLowerCase()} и профессиональный.
+
+С уважением,
+${currentUser?.email || 'Ваш специалист'}`;
+            
+            document.getElementById('proposalContent').textContent = proposal;
+            document.getElementById('proposalResult').style.display = 'block';
+            
+            showNotification('✅ Предложение создано!', 'success');
+        }
+
+        // Копирование предложения
+        function copyProposal() {
+            const proposal = document.getElementById('proposalContent').textContent;
+            navigator.clipboard.writeText(proposal).then(() => {
+                showNotification('✅ Предложение скопировано в буфер обмена!', 'success');
+            }).catch(() => {
+                showNotification('❌ Не удалось скопировать', 'error');
+            });
+        }
+
+        // Сохранение предложения
+        function saveProposal() {
+            showNotification('💾 Функция сохранения в разработке', 'info');
+        }
+
+        // Генерация нового предложения
+        function generateNew() {
+            document.getElementById('proposalResult').style.display = 'none';
+            document.getElementById('proposalForm').reset();
+            showNotification('🔄 Форма очищена, готово к новому предложению', 'info');
+        }
+
+        // Открытие менеджера подписок
+        function openSubscriptionManager() {
+            window.open('subscription_manager.html', '_blank');
+        }
+
+        // Настройка Yandex GPT API
+        function setupYandexGPTAPI() {
+            window.open('yandex_gpt_setup.html', '_blank');
+        }
+
+        // Открытие модального окна обновления
+        function openUpgradeModal() {
+            document.getElementById('upgradeModal').style.display = 'block';
+        }
+
+        // Закрытие модального окна обновления
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').style.display = 'none';
+        }
+
+        // Обновление до Premium
+        function upgradeToPremium() {
+            showNotification('💎 Функция обновления в разработке', 'info');
+            closeUpgradeModal();
+        }
+
+        // Настройка обработчиков событий
+        function setupEventListeners() {
+            // Форма регистрации
+            document.getElementById('registerFormElement').addEventListener('submit', handleRegister);
+            
+            // Форма входа
+            document.getElementById('loginFormElement').addEventListener('submit', handleLogin);
+            
+            // GitHub вход
+            document.getElementById('githubLoginBtn').addEventListener('click', handleGitHubLogin);
+            
+            // Переключение вкладок
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    showTab(btn.dataset.tab);
+                });
+            });
+        }
+
+        // Загрузка Supabase SDK
+        async function loadSupabaseSDK() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                
+                script.onload = () => {
+                    console.log('✅ Supabase SDK загружен с cdn.jsdelivr.net');
+                    resolve();
+                };
+                
+                script.onerror = () => {
+                    console.log('⚠️ Ошибка загрузки с cdn.jsdelivr.net, пробуем unpkg.com');
+                    
+                    const fallbackScript = document.createElement('script');
+                    fallbackScript.src = 'https://unpkg.com/@supabase/supabase-js@2';
+                    
+                    fallbackScript.onload = () => {
+                        console.log('✅ Supabase SDK загружен с unpkg.com');
+                        resolve();
+                    };
+                    
+                    fallbackScript.onerror = () => {
+                        console.error('❌ Не удалось загрузить Supabase SDK');
+                        reject(new Error('Не удалось загрузить Supabase SDK'));
+                    };
+                    
+                    document.head.appendChild(fallbackScript);
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+
+        // Основная функция инициализации
+        async function initializeApp() {
+            try {
+                showLoadingIndicator();
+                
+                // Загружаем Supabase SDK
+                await loadSupabaseSDK();
+                
+                // Загружаем auth.js
+                const authScript = document.createElement('script');
+                authScript.src = 'auth.js';
+                document.body.appendChild(authScript);
+                
+                // Ждем загрузки auth.js
+                await new Promise((resolve) => {
+                    const checkAuth = setInterval(() => {
+                        if (typeof registerUser !== 'undefined' && 
+                            typeof loginUser !== 'undefined' && 
+                            typeof logoutUser !== 'undefined') {
+                            clearInterval(checkAuth);
+                            console.log('✅ Все функции auth.js загружены');
+                            resolve();
+                        }
+                    }, 100);
+                    
+                    // Таймаут через 10 секунд
+                    setTimeout(() => {
+                        clearInterval(checkAuth);
+                        console.warn('⚠️ Таймаут ожидания auth.js');
+                        resolve();
+                    }, 10000);
+                });
+                
+                // Настраиваем обработчики событий
+                setupEventListeners();
+                
+                hideLoadingIndicator();
+                showNotification('✅ Система готова к работе!', 'success');
+                
+            } catch (error) {
+                hideLoadingIndicator();
+                showNotification('❌ Ошибка инициализации: ' + error.message, 'error');
+                console.error('Ошибка инициализации:', error);
+            }
+        }
+
+        // Запускаем приложение при загрузке страницы
+        window.addEventListener('load', initializeApp);
+    </script>
+</body>
+</html>

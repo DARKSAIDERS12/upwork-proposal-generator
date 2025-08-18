@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест новой версии</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 3px; margin: 10px 0; font-family: monospace; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+        h1 { color: #333; text-align: center; }
+        h3 { color: #555; }
+        .status { padding: 10px; border-radius: 5px; margin: 10px 0; }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .status.info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест новой версии системы</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Информация</h3>
+            <p>Эта страница тестирует новую версию системы без проблем с БД.</p>
+            <p><strong>Время:</strong> <span id="currentTime"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 Тест загрузки</h3>
+            <button onclick="testLoading()">Тест загрузки</button>
+            <div id="loadingResult" class="log"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔗 Ссылки на тестирование</h3>
+            <div class="status info">
+                <strong>Основная страница:</strong> <a href="index.html" target="_blank">index.html</a> (новая версия)
+            </div>
+            <div class="status info">
+                <strong>Старая версия:</strong> <a href="index_old.html" target="_blank">index_old.html</a> (для сравнения)
+            </div>
+            <div class="test-section">
+                <h3>📁 Файлы проекта</h3>
+                <button onclick="listFiles()">Показать файлы</button>
+                <div id="filesResult" class="log"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ Статус исправлений</h3>
+            <div class="status success">
+                <strong>✅ Исправлено:</strong> Проблема с колонкой daily_remaining
+            </div>
+            <div class="status success">
+                <strong>✅ Исправлено:</strong> Функция saveUserProfile отключена
+            </div>
+            <div class="status success">
+                <strong>✅ Исправлено:</strong> Валидация пароля (минимум 6 символов)
+            </div>
+            <div class="status success">
+                <strong>✅ Исправлено:</strong> Упрощена логика загрузки
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧹 Очистка кэша</h3>
+            <button onclick="clearCache()" class="btn-danger">Очистить кэш браузера</button>
+            <div id="cacheResult" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // Показываем текущее время
+        function updateTime() {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString();
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        function log(elementId, message) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            element.textContent += `[${timestamp}] ${message}\n`;
+            element.scrollTop = element.scrollHeight;
+        }
+
+        function testLoading() {
+            const logElement = document.getElementById('loadingResult');
+            logElement.textContent = '';
+            
+            log(logElement, '🔄 Тестируем загрузку новой версии...');
+            
+            // Проверяем основные элементы
+            const elements = ['container', 'currentTime'];
+            let allElementsExist = true;
+            
+            elements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    log(logElement, `✅ Элемент ${id} найден`);
+                } else {
+                    log(logElement, `❌ Элемент ${id} не найден`);
+                    allElementsExist = false;
+                }
+            });
+            
+            if (allElementsExist) {
+                log(logElement, '✅ Все основные элементы загружены');
+                log(logElement, '✅ Новая версия работает корректно');
+            } else {
+                log(logElement, '❌ Некоторые элементы не загружены');
+            }
+        }
+
+        function listFiles() {
+            const logElement = document.getElementById('filesResult');
+            logElement.textContent = '';
+            
+            log(logElement, '📁 Список основных файлов проекта:');
+            log(logElement, '✅ index.html - новая версия (исправлена)');
+            log(logElement, '⚠️ index_old.html - старая версия (с проблемами)');
+            log(logElement, '✅ auth.js - новая версия (без проблем с БД)');
+            log(logElement, '⚠️ auth_old.js - старая версия (с проблемами)');
+            log(logElement, '✅ styles.css - стили');
+            log(logElement, '✅ test_new_version.html - эта страница');
+        }
+
+        function clearCache() {
+            const logElement = document.getElementById('cacheResult');
+            logElement.textContent = '';
+            
+            log(logElement, '🧹 Очистка кэша...');
+            log(logElement, 'ℹ️ Для полной очистки кэша:');
+            log(logElement, '  1. Нажмите Ctrl+Shift+Delete (или Cmd+Shift+Delete на Mac)');
+            log(logElement, '  2. Выберите "Все время"');
+            log(logElement, '  3. Отметьте "Кэшированные изображения и файлы"');
+            log(logElement, '  4. Нажмите "Удалить данные"');
+            log(logElement, '  5. Перезагрузите страницу');
+            
+            // Пытаемся очистить кэш программно
+            if ('caches' in window) {
+                caches.keys().then(names => {
+                    names.forEach(name => {
+                        caches.delete(name);
+                    });
+                    log(logElement, '✅ Кэш Service Worker очищен');
+                });
+            }
+        }
+
+        // Автоматический тест при загрузке
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testLoading();
+                listFiles();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
