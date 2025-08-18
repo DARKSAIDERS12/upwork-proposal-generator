@@ -223,14 +223,40 @@ async function logoutUser() {
   }
   
   try {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-    
-    console.log('✅ Пользователь успешно вышел из системы');
+    // Если сессии нет — считаем выход успешным (частый кейс на мобильных)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+      try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
+      console.log('✅ Выход (сессии не было) — локальные данные очищены');
+      return true;
+    }
+
+    // Пытаемся глобально выйти (отозвать токены)
+    let globalError = null;
+    const { error } = await supabase.auth.signOut({ scope: 'global' });
+    if (error) {
+      globalError = error;
+      console.warn('⚠️ Ошибка глобального выхода:', error.message || error);
+    }
+
+    // Всегда чистим локально
+    try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+    try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
+
+    if (globalError && !(String(globalError.message || '').includes('Auth session missing'))) {
+      // Если ошибка не про отсутствие сессии — прокинем
+      throw globalError;
+    }
+
+    console.log('✅ Пользователь вышел (учтена мобильная ошибка Auth session missing)');
     return true;
   } catch (error) {
-    console.error("Ошибка выхода:", error);
-    throw error;
+    console.error("❌ Ошибка выхода (мягкая обработка):", error);
+    // Последняя попытка локальной очистки, чтобы UX не страдал
+    try { await supabase.auth.signOut({ scope: 'local' }); } catch (_) {}
+    try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
+    return true;
   }
 }
 
