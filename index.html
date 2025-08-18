@@ -1423,7 +1423,11 @@ ${description}
                             // Если email не подтвержден, не пытаемся создавать профиль без сессии
                             if (loginError.message.includes('Email not confirmed')) {
                                 console.log('📧 Email не подтвержден — профиль будет создан после подтверждения и входа.');
-                                showNotification('✅ Регистрация успешна! Подтвердите email и затем войдите в систему.', 'success');
+                                try {
+                                    // Временное сохранение для автологина после подтверждения (10 минут)
+                                    sessionStorage.setItem('pendingAuth', JSON.stringify({ email, password, createdAt: Date.now() }));
+                                } catch (e) { /* ignore */ }
+                                showNotification('✅ Регистрация успешна! Подтвердите email и затем войдите в систему (вход произойдёт автоматически).', 'success');
                                 showTab('login');
                                 return data.user;
                             }
@@ -1437,6 +1441,7 @@ ${description}
                         console.log('💾 Создаем профиль с активной сессией...');
                         await saveUserProfile(loginData.user, "email");
                         console.log('✅ Профиль пользователя создан');
+                        try { sessionStorage.removeItem('pendingAuth'); } catch (e) { /* ignore */ }
                         
                         // Обновляем глобальные переменные
                         currentUser = loginData.user;
@@ -1729,6 +1734,31 @@ ${description}
         async function checkInitialAuthState() {
             try {
                 console.log('🔍 Проверяем начальное состояние аутентификации...');
+                // Обработка редиректа после подтверждения email: попытка автологина
+                try {
+                    const hash = location.hash || '';
+                    const isSignupFlow = /type=signup/i.test(location.href) || /access_token=/i.test(hash);
+                    if (isSignupFlow) {
+                        const raw = sessionStorage.getItem('pendingAuth');
+                        if (raw) {
+                            const obj = JSON.parse(raw);
+                            const notExpired = obj && obj.createdAt && (Date.now() - obj.createdAt < 10 * 60 * 1000);
+                            if (notExpired && obj.email && obj.password) {
+                                console.log('🔐 Обнаружен подтверждённый аккаунт, делаем авто-вход...');
+                                try {
+                                    const user = await loginUser(obj.email, obj.password);
+                                    if (user) {
+                                        sessionStorage.removeItem('pendingAuth');
+                                    }
+                                } catch (e) {
+                                    console.warn('⚠️ Авто-вход после подтверждения не удался:', e.message);
+                                }
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Ошибка обработки авто-входа после подтверждения:', e.message);
+                }
                 
                 const { data: { session } } = await supabase.auth.getSession();
                 if (session && session.user) {
