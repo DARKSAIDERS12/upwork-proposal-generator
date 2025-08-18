@@ -20,6 +20,7 @@
                 <a href="subscription_manager.html" class="btn-secondary">⚙️ Управление подпиской</a>
                 <a href="yandex_gpt_setup.html" class="btn-secondary">🤖 Настройка API</a>
                 <button id="logoutBtn" class="btn-secondary">Выйти</button>
+                <button id="deleteAccountBtn" class="btn-secondary" style="background:#ef4444;border-color:#ef4444;">Удалить аккаунт</button>
             </div>
         </header>
 
@@ -815,6 +816,64 @@
                     }, 15000);
                 }
             });
+        }
+
+        // Удаление аккаунта
+        async function deleteAccount() {
+            try {
+                if (!isInitialized) {
+                    if (!initSupabase()) {
+                        throw new Error('Supabase не инициализирован');
+                    }
+                }
+
+                if (!confirm('Вы уверены, что хотите удалить аккаунт? Это действие необратимо.')) {
+                    return;
+                }
+
+                const { data: { session } } = await supabase.auth.getSession();
+                if (!session || !session.user) {
+                    showNotification('Сначала войдите в систему', 'warning');
+                    return;
+                }
+
+                showNotification('🔄 Удаляем аккаунт...', 'info');
+
+                // Сначала пробуем вызвать Edge Function (если развернута)
+                let edgeOk = false;
+                try {
+                    const { data: fnData, error: fnError } = await supabase.functions.invoke('delete-user', {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${session.access_token}` },
+                        body: {}
+                    });
+                    if (fnError) {
+                        console.warn('⚠️ Ошибка функции удаления:', fnError);
+                    } else {
+                        edgeOk = !!fnData?.success || true;
+                    }
+                } catch (e) {
+                    console.warn('⚠️ Edge Function delete-user недоступна:', e?.message || e);
+                }
+
+                if (!edgeOk) {
+                    // Фолбэк: удаляем профиль пользователя в публичных таблицах
+                    try {
+                        await supabase.from('user_profiles').delete().eq('id', session.user.id);
+                    } catch (delErr) {
+                        console.warn('⚠️ Не удалось удалить профиль из user_profiles:', delErr);
+                    }
+                }
+
+                // Выходим из системы
+                try { await logoutUser(); } catch (_) {}
+                try { localStorage.clear(); sessionStorage.clear(); } catch (_) {}
+                hideMainContent();
+                showNotification('✅ Аккаунт удалён. Если он всё ещё отображается в списке пользователей Supabase, разверните Edge Function delete-user.', 'success');
+            } catch (error) {
+                console.error('❌ Ошибка удаления аккаунта:', error);
+                showNotification(`❌ Ошибка удаления аккаунта: ${error.message}`, 'error');
+            }
         }
 
         // Повторная отправка письма подтверждения Email
@@ -1873,6 +1932,12 @@ ${description}
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', handleLogout);
+            }
+
+            // Обработчик для кнопки удаления аккаунта
+            const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+            if (deleteAccountBtn) {
+                deleteAccountBtn.addEventListener('click', deleteAccount);
             }
             
             // Обработчик для кнопки открытия подписки
