@@ -1337,11 +1337,14 @@ ${description}
                 const deviceType = isMobile ? '📱 Мобильное устройство' : '💻 Компьютер';
                 console.log(`${deviceType} - Начинаем регистрацию пользователя:`, email);
                 
+                const redirectUrl = location.hostname.endsWith('github.io')
+                    ? `${location.origin}/upwork-proposal-generator/`
+                    : location.origin;
                 const { data, error } = await supabase.auth.signUp({
                     email: email,
                     password: password,
                     options: {
-                        emailRedirectTo: window.location.origin,
+                        emailRedirectTo: redirectUrl,
                         data: {
                             full_name: fullName || email
                         }
