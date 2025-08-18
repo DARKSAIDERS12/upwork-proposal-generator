@@ -68,6 +68,11 @@
                         </div>
                         <button type="submit" class="btn-primary">Войти</button>
                     </form>
+                    <div class="helper-actions">
+                        <button type="button" id="resendConfirmLink" class="btn-secondary" style="margin-top: 10px;">
+                            Отправить письмо подтверждения повторно
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Register Form -->
@@ -812,6 +817,42 @@
             });
         }
 
+        // Повторная отправка письма подтверждения Email
+        async function resendConfirmationEmail() {
+            try {
+                if (!isInitialized) {
+                    if (!initSupabase()) {
+                        throw new Error('Supabase не инициализирован');
+                    }
+                }
+
+                const loginEmailEl = document.getElementById('loginEmail');
+                const registerEmailEl = document.getElementById('registerEmail');
+                const email = (loginEmailEl && loginEmailEl.value) || (registerEmailEl && registerEmailEl.value) || '';
+
+                if (!email) {
+                    showNotification('Введите email в форму входа или регистрации', 'warning');
+                    return;
+                }
+
+                const redirectUrl = location.hostname.endsWith('github.io')
+                    ? `${location.origin}/upwork-proposal-generator/`
+                    : location.origin;
+
+                const { error } = await supabase.auth.resend({ type: 'signup', email, options: { emailRedirectTo: redirectUrl } });
+                if (error) {
+                    console.error('❌ Ошибка повторной отправки письма:', error);
+                    showNotification(`❌ Не удалось отправить письмо: ${error.message}`, 'error');
+                    return;
+                }
+
+                showNotification('📧 Письмо подтверждения отправлено повторно. Проверьте почту и Спам.', 'success');
+            } catch (err) {
+                console.error('❌ Ошибка resendConfirmationEmail:', err);
+                showNotification(`❌ Ошибка: ${err.message}`, 'error');
+            }
+        }
+
         // Функция для проверки текущего состояния аутентификации
         async function checkAuthState() {
             try {
@@ -1377,7 +1418,7 @@ ${description}
                         });
                         
                         if (loginError) {
-                            console.error('❌ Ошибка автоматического входа:', loginError);
+                            console.warn('⚠️ Ошибка автоматического входа (ожидаемо при неподтверждённой почте):', loginError);
                             
                             // Если email не подтвержден, не пытаемся создавать профиль без сессии
                             if (loginError.message.includes('Email not confirmed')) {
@@ -1784,6 +1825,12 @@ ${description}
             const registerForm = document.getElementById('registerFormElement');
             if (registerForm) {
                 registerForm.addEventListener('submit', handleRegister);
+            }
+
+            // Кнопка повторной отправки письма подтверждения
+            const resendBtn = document.getElementById('resendConfirmLink');
+            if (resendBtn) {
+                resendBtn.addEventListener('click', resendConfirmationEmail);
             }
             
             // Обработчик для формы генерации предложений
